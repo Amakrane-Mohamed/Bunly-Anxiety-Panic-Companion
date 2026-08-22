@@ -105,3 +105,42 @@ class _BunlyPrimaryButtonState extends State<BunlyPrimaryButton> {
     );
   }
 }
+
+class BunlyTextButton extends StatelessWidget {
+  const BunlyTextButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onPressed();
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: AppTypography.ui(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.1,
+              color: AppColors.inkMuted,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

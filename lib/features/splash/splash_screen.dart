@@ -1,15 +1,13 @@
 import 'dart:math' as math;
 
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/constants/app_assets.dart';
+import '../../core/platform/native_chrome.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
-import '../home/home_screen.dart';
-import '../welcome/welcome_screen.dart';
+import '../shell/app_shell.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -61,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
       _phrase.value = 0;
       _fill.value = 0;
-      setState(() => _overlayGone = true);
+      _showApp();
       return;
     }
 
@@ -91,7 +89,12 @@ class _SplashScreenState extends State<SplashScreen>
     await _fill.reverse();
     if (!mounted) return;
 
+    _showApp();
+  }
+
+  void _showApp() {
     setState(() => _overlayGone = true);
+    NativeChrome.reveal();
   }
 
   @override
@@ -112,9 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
     return Stack(
       fit: StackFit.expand,
       children: [
-        Firebase.apps.isNotEmpty && FirebaseAuth.instance.currentUser != null
-            ? const HomeScreen()
-            : const WelcomeScreen(),
+        AppShell(chromeReady: _overlayGone),
         if (!_overlayGone)
           AnimatedBuilder(
             animation: Listenable.merge([_icon, _fill, _phrase]),

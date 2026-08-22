@@ -16,10 +16,17 @@ abstract final class AppTheme {
         brightness: Brightness.light,
       ),
       scaffoldBackgroundColor: AppColors.canvas,
-      cupertinoOverrideTheme: CupertinoThemeData(
+      cupertinoOverrideTheme: const CupertinoThemeData(
         brightness: Brightness.light,
+        primaryColor: AppColors.brand,
+        barBackgroundColor: Color(0xCCFFFFFF),
         textTheme: CupertinoTextThemeData(
           textStyle: TextStyle(fontFamily: AppFonts.family),
+          navTitleTextStyle: TextStyle(
+            fontFamily: AppFonts.family,
+            fontWeight: FontWeight.w700,
+            color: AppColors.ink,
+          ),
         ),
       ),
     );

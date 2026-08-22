@@ -18,6 +18,7 @@ class TalkingTitle extends StatefulWidget {
     this.color,
     this.emphasisColor,
     this.alignment = WrapAlignment.start,
+    this.shadows,
     this.onComplete,
   });
 
@@ -30,6 +31,7 @@ class TalkingTitle extends StatefulWidget {
   final Color? color;
   final Color? emphasisColor;
   final WrapAlignment alignment;
+  final List<Shadow>? shadows;
   final VoidCallback? onComplete;
 
   @override
@@ -102,7 +104,7 @@ class _TalkingTitleState extends State<TalkingTitle> {
                   height: 1.16,
                   letterSpacing: -0.8,
                   color: _emphasized(words[i], marks) ? emph : base,
-                ),
+                ).copyWith(shadows: widget.shadows),
               ),
             ),
         ],

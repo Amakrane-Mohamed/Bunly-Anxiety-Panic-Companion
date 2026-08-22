@@ -18,6 +18,7 @@ dependencies:
   sign_in_with_apple: ^8.1.0
   google_sign_in: ^7.2.0
   crypto: ^3.0.7
+  audioplayers: ^6.5.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -36,9 +37,12 @@ flutter:
   assets:
     - assets/images/
     - assets/images/onboarding/
+    - assets/images/bunly/
     - assets/images/bunly/emotions/
     - assets/images/bunly/poses/
     - assets/images/bunly/activities/
+    - assets/images/bunly/panic/
+    - assets/images/bunly/journey/
     - assets/icons/
     - assets/audio/
     - assets/animations/

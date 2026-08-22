@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/audio/app_audio.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/theme/app_colors.dart';
@@ -15,6 +16,10 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppAudio.startMusic();
+    });
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(

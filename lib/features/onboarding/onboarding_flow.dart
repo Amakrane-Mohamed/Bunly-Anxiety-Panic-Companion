@@ -2,7 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/audio/app_audio.dart';
 import '../../core/motion/app_motion.dart';
+import '../../core/profile/user_plan.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
@@ -28,6 +30,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   var _index = 0;
   final _multi = <int, Set<int>>{};
   final _sliders = <int, double>{};
+
+  @override
+  void initState() {
+    super.initState();
+    AppAudio.startMusic();
+  }
 
   OnboardingStep get _step => _steps[_index];
 
@@ -70,6 +78,25 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     });
   }
 
+  void _savePlan() {
+    List<String> picked(int index) {
+      final options = _steps[index].options;
+      final selected = _multi[index] ?? {};
+      return selected
+          .where((i) => i >= 0 && i < options.length)
+          .map((i) => options[i])
+          .toList();
+    }
+
+    final plan = UserPlan.instance;
+    plan.hardest = picked(1);
+    plan.feelsLike = picked(4);
+    plan.wish = picked(7);
+    plan.win = picked(9);
+    plan.heaviness = _sliders[3] ?? 0.5;
+    plan.waiting = _sliders[5] ?? 0.5;
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
@@ -105,6 +132,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               _GeneratingStep(
                 pose: _step.pose,
                 onDone: () {
+                  _savePlan();
                   final signedIn = FirebaseAuth.instance.currentUser != null;
                   Navigator.of(context).pushAndRemoveUntil(
                     AppMotion.fadeTo(

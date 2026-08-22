@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+import '../../core/audio/app_audio.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/theme/app_colors.dart';
@@ -18,8 +19,15 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AppAudio.stopMusic();
+  }
+
   void _continue() {
     HapticFeedback.lightImpact();
+    AppAudio.answer();
     Navigator.of(context).pushAndRemoveUntil(
       AppMotion.fadeTo(const HomeScreen()),
       (_) => false,

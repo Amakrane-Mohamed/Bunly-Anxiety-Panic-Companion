@@ -6,6 +6,8 @@ abstract final class AppAssets {
     ...BunlyEmotions.all,
     ...BunlyPoses.all,
     ...BunlyActivities.all,
+    ...BunlyPanic.all,
+    ...BunlyJourney.all,
   ];
 }
 
@@ -14,6 +16,9 @@ abstract final class OnboardingArt {
   static const String socialProof = '$_base/social_proof.png';
   static const String journeyLandscape = '$_base/journey_landscape.png';
   static const String sky = '$_base/sky.png';
+  static const String house = '$_base/house.png';
+  static const String doctor = '$_base/doctor.png';
+  static const String paywall = '$_base/paywall.png';
   static const String iconBefore = '$_base/icon_before.png';
   static const String iconAfter = '$_base/icon_after.png';
 }
@@ -51,6 +56,7 @@ abstract final class BunlyPoses {
   static const String huggingStar = '$_base/hugging_star.png';
   static const String proud = '$_base/proud.png';
   static const String winking = '$_base/winking.png';
+  static const String happyWin = 'assets/images/bunly/happy_win.png';
 
   static const List<String> all = [
     jumping,
@@ -59,6 +65,53 @@ abstract final class BunlyPoses {
     huggingStar,
     proud,
     winking,
+    happyWin,
+  ];
+}
+
+abstract final class BunlyPanic {
+  static const String _base = 'assets/images/bunly/panic';
+  static const String readyToHelp = '$_base/ready_to_help.png';
+  static const String breathing = '$_base/breathing.png';
+  static const String grounding = '$_base/grounding.png';
+  static const String countingDown = '$_base/counting_down.png';
+  static const String staying = '$_base/staying.png';
+  static const String easing = '$_base/easing.png';
+  static const String passed = '$_base/passed.png';
+  static const String recovery = '$_base/recovery.png';
+
+  static const List<String> all = [
+    readyToHelp,
+    breathing,
+    grounding,
+    countingDown,
+    staying,
+    easing,
+    passed,
+    recovery,
+  ];
+}
+
+abstract final class BunlyJourney {
+  static const String _base = 'assets/images/bunly/journey';
+  static const String firstStep = '$_base/first_step.png';
+  static const String victory = '$_base/victory.png';
+  static const String pathAhead = '$_base/path_ahead.png';
+  static const String graduation = '$_base/graduation.png';
+  static const String streak = '$_base/streak.png';
+  static const String milestone = '$_base/milestone.png';
+  static const String growth = '$_base/growth.png';
+  static const String encouragement = '$_base/encouragement.png';
+
+  static const List<String> all = [
+    firstStep,
+    victory,
+    pathAhead,
+    graduation,
+    streak,
+    milestone,
+    growth,
+    encouragement,
   ];
 }
 

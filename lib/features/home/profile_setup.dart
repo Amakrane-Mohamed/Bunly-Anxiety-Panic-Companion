@@ -1,26 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/audio/app_audio.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/motion/app_motion.dart';
+import '../../core/profile/user_plan.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
-import '../../shared/widgets/fade_up.dart';
-import '../../shared/widgets/talking_title.dart';
+import '../../shared/widgets/talk_bubble.dart';
 
 enum _ProfileStep { birthday, pronouns, name }
 
 class _StepCopy {
-  const _StepCopy({
-    required this.title,
-    required this.highlight,
-    this.pose,
-  });
+  const _StepCopy({required this.title, required this.highlight});
 
   final String title;
   final String highlight;
-  final String? pose;
 }
 
 class ProfileSetupOverlay extends StatefulWidget {
@@ -36,25 +32,28 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
     with SingleTickerProviderStateMixin {
   static const _copy = {
     _ProfileStep.birthday: _StepCopy(
-      title: 'What’s your date of birth?',
-      highlight: 'date of birth',
-      pose: BunlyPoses.sitting,
+      title: 'When’s your birthday?',
+      highlight: 'birthday',
     ),
     _ProfileStep.pronouns: _StepCopy(
-      title: 'How would you like me to refer to you?',
-      highlight: 'refer to you',
+      title: 'How should I talk about you?',
+      highlight: 'talk about you',
     ),
     _ProfileStep.name: _StepCopy(
       title: 'What should I call you?',
       highlight: 'call you',
-      pose: BunlyPoses.huggingStar,
     ),
   };
 
   static const _pronouns = [
     (label: 'she', value: 'she', pose: BunlyPoses.delighted, hint: 'Female'),
     (label: 'he', value: 'he', pose: BunlyPoses.proud, hint: 'Male'),
-    (label: 'they', value: 'they', pose: BunlyPoses.winking, hint: 'Non-binary'),
+    (
+      label: 'they',
+      value: 'they',
+      pose: BunlyPoses.winking,
+      hint: 'Non-binary',
+    ),
   ];
 
   late final AnimationController _sheet;
@@ -150,7 +149,7 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
     }
   }
 
-  void _onTitleDone(_ProfileStep step) {
+  void _onMessageDone(_ProfileStep step) {
     if (!mounted || _closing || _step != step) return;
     _showSheet();
   }
@@ -184,6 +183,10 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
         setState(() => _step = _ProfileStep.name);
       case _ProfileStep.name:
         _closing = true;
+        final plan = UserPlan.instance;
+        plan.name = _name.text.trim();
+        plan.pronoun = _pronoun ?? 'they';
+        plan.birthday = _birthday;
         if (MediaQuery.disableAnimationsOf(context)) {
           widget.onDone();
           return;
@@ -203,52 +206,29 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
     return Stack(
       fit: StackFit.expand,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(28, 28, 28, 0),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 420),
-                  switchInCurve: AppMotion.curve,
-                  switchOutCurve: AppMotion.curve,
-                  child: TalkingTitle(
-                    key: ValueKey(step),
-                    text: copy.title,
-                    highlight: copy.highlight,
-                    onComplete: () => _onTitleDone(step),
-                  ),
-                ),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.center,
+              colors: [Color(0x66000000), Color(0x00000000)],
+            ),
+          ),
+        ),
+        Align(
+          alignment: Alignment.topCenter,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: TalkBubble(
+                key: ValueKey(step),
+                text: copy.title,
+                highlight: copy.highlight,
+                onComplete: () => _onMessageDone(step),
               ),
             ),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: AppMotion.page,
-                switchInCurve: AppMotion.curve,
-                switchOutCurve: AppMotion.curve,
-                child: copy.pose == null
-                    ? const SizedBox.expand(key: ValueKey('empty'))
-                    : Align(
-                        key: ValueKey(copy.pose),
-                        alignment: Alignment.bottomCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: FadeUp(
-                            offset: 18,
-                            child: Image.asset(
-                              copy.pose!,
-                              height: 220,
-                              fit: BoxFit.contain,
-                              filterQuality: FilterQuality.high,
-                            ),
-                          ),
-                        ),
-                      ),
-              ),
-            ),
-          ],
+          ),
         ),
         Align(
           alignment: Alignment.bottomCenter,
@@ -259,9 +239,9 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
               child: FadeTransition(
                 opacity: _fade,
                 child: Material(
-                  color: Colors.white,
-                  elevation: 16,
-                  shadowColor: AppColors.splash.withValues(alpha: 0.18),
+                  color: const Color(0xFFFFF7F0),
+                  elevation: 20,
+                  shadowColor: const Color(0x663C275C),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(36),
                   ),
@@ -273,7 +253,7 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
                         24,
-                        28,
+                        26,
                         24,
                         18 + bottomInset,
                       ),
@@ -347,9 +327,9 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Text(
-              'If you’re considered a minor in your country of residence, you’ll need permission from a parent or legal guardian to create an account. Being at least 13 years old is a mandatory requirement to use the app.',
+              'You need to be 13 or older to use Bunly. If you’re a minor, a parent or guardian should say yes first.',
               textAlign: TextAlign.center,
               style: AppTypography.ui(
                 fontSize: 13,
@@ -374,6 +354,7 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
                   selected: _pronoun == _pronouns[i].value,
                   onTap: () {
                     HapticFeedback.selectionClick();
+                    AppAudio.answer();
                     setState(() => _pronoun = _pronouns[i].value);
                   },
                 ),
@@ -405,15 +386,15 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               borderSide: const BorderSide(color: AppColors.brand, width: 1.6),
             ),
           ),
@@ -517,7 +498,7 @@ class _GenderCard extends StatelessWidget {
             curve: Curves.easeOut,
             padding: const EdgeInsets.fromLTRB(8, 12, 8, 14),
             decoration: BoxDecoration(
-              color: selected ? AppColors.optionSelected : AppColors.optionFill,
+              color: selected ? const Color(0xFFFFF0E4) : Colors.white,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: selected

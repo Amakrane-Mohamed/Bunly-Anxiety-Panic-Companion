@@ -70,7 +70,9 @@ class OnboardingProgressBar extends StatelessWidget {
     return Row(
       children: [
         GestureDetector(
-          onTap: onBack,
+          onTap: () {
+            onBack();
+          },
           behavior: HitTestBehavior.opaque,
           child: Container(
             width: 44,
