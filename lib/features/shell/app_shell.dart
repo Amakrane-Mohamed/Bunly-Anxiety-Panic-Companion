@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/platform/native_chrome.dart';
+import '../../core/platform/widget_bridge.dart';
+import '../../core/store/app_store.dart';
 import '../../core/theme/app_colors.dart';
 import '../insights/insights_screen.dart';
 import '../journey/journey_screen.dart';
+import '../panic/panic_entry_sheet.dart';
 import '../today/today_screen.dart';
 import '../you/you_screen.dart';
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key, this.chromeReady = true});
-
-  final bool chromeReady;
+  const AppShell({super.key});
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -23,37 +24,49 @@ class _AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
-    NativeChrome.tabIndex.addListener(_onNativeTab);
-    _attachChrome();
-  }
-
-  @override
-  void didUpdateWidget(AppShell oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.chromeReady && !oldWidget.chromeReady) {
-      NativeChrome.reveal();
-    }
+    NativeChrome.tabIndex.addListener(_onTab);
+    WidgetBridge.onOpened = _openFromWidget;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _attach());
   }
 
   @override
   void dispose() {
-    NativeChrome.tabIndex.removeListener(_onNativeTab);
+    if (WidgetBridge.onOpened == _openFromWidget) {
+      WidgetBridge.onOpened = null;
+    }
+    NativeChrome.tabIndex.removeListener(_onTab);
     super.dispose();
   }
 
-  void _attachChrome() {
+  Future<void> _attach() async {
     if (_attached) return;
     _attached = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await NativeChrome.attach();
+    await NativeChrome.hideTabs();
+    await NativeChrome.attach();
+    final store = AppStore.instance;
+    await WidgetBridge.sync(
+      hearts: store.hearts,
+      streak: store.checkInStreak,
+      line: store.bunlyLine,
+      practicedToday: store.practicedOn(AppStore.dateOnly(DateTime.now())),
+    );
+    final pending = WidgetBridge.pending;
+    if (pending != null) {
+      WidgetBridge.pending = null;
+      _openFromWidget(pending);
+    }
+  }
+
+  void _openFromWidget(String host) {
+    NativeChrome.setTab(0);
+    if (host != 'sos') return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (widget.chromeReady) {
-        await NativeChrome.reveal();
-      }
+      PanicEntrySheet.sos(context);
     });
   }
 
-  void _onNativeTab() {
+  void _onTab() {
     if (mounted) setState(() {});
   }
 
@@ -62,11 +75,11 @@ class _AppShellState extends State<AppShell> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: AppColors.canvas,
+        systemNavigationBarColor: AppColors.home,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: ColoredBox(
-        color: AppColors.canvas,
+        color: AppColors.home,
         child: IndexedStack(
           index: NativeChrome.tabIndex.value,
           children: const [

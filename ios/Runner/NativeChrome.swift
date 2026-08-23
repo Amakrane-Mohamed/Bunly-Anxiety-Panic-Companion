@@ -1,18 +1,14 @@
 import Flutter
 import UIKit
 
-/// Real UIKit bars overlaid on the Flutter window.
-/// Uses `UINavigationBar` + `UITabBar` (the OS widgets), not a Flutter-drawn fake.
+/// Real iOS tab bar only. No navigation bar overlay.
 final class NativeChrome: NSObject, UITabBarDelegate {
   static let shared = NativeChrome()
 
   private var channel: FlutterMethodChannel?
   private var flutter: FlutterViewController?
-  private var navigationBar: UINavigationBar?
   private var tabBar: UITabBar?
-  private var navItems: [UINavigationItem] = []
   private var attached = false
-  private var wantsNav = false
   private var wantsTab = false
   private var retries = 0
 
@@ -36,20 +32,9 @@ final class NativeChrome: NSObject, UITabBarDelegate {
         selectTab(index)
       }
       result(nil)
-    case "setTitle":
-      if let title = call.arguments as? String {
-        currentItem?.title = title
-      }
-      result(nil)
     case "setVisible":
       let args = call.arguments as? [String: Any]
-      setVisible(
-        nav: boolValue(args?["nav"], fallback: true),
-        tab: boolValue(args?["tab"], fallback: true)
-      )
-      result(nil)
-    case "setBack":
-      setBackVisible(boolValue(call.arguments, fallback: false))
+      setVisible(tab: boolValue(args?["tab"], fallback: true))
       result(nil)
     default:
       result(FlutterMethodNotImplemented)
@@ -58,6 +43,10 @@ final class NativeChrome: NSObject, UITabBarDelegate {
 
   private func attach(result: FlutterResult?) {
     if attached {
+      if let window = currentWindow() {
+        stripNavigationBars(from: window)
+      }
+      setVisible(tab: wantsTab)
       result?(nil)
       return
     }
@@ -78,26 +67,17 @@ final class NativeChrome: NSObject, UITabBarDelegate {
 
     attached = true
     self.flutter = flutter
+    stripNavigationBars(from: window)
 
-    let items = titles.map { title -> UINavigationItem in
-      let item = UINavigationItem(title: title)
-      item.largeTitleDisplayMode = .always
-      item.hidesBackButton = true
-      return item
-    }
-    navItems = items
-
-    let navBar = UINavigationBar()
-    navBar.prefersLargeTitles = true
-    navBar.tintColor = purple
-    navBar.setItems([items[0]], animated: false)
-    navBar.translatesAutoresizingMaskIntoConstraints = false
-    navigationBar = navBar
+    let appearance = UITabBarAppearance()
+    appearance.configureWithDefaultBackground()
 
     let tabBar = UITabBar()
     tabBar.delegate = self
     tabBar.tintColor = purple
     tabBar.unselectedItemTintColor = .secondaryLabel
+    tabBar.standardAppearance = appearance
+    tabBar.scrollEdgeAppearance = appearance
     tabBar.items = titles.enumerated().map { index, title in
       UITabBarItem(
         title: title,
@@ -106,46 +86,35 @@ final class NativeChrome: NSObject, UITabBarDelegate {
       )
     }
     tabBar.selectedItem = tabBar.items?.first
+    tabBar.isHidden = true
     tabBar.translatesAutoresizingMaskIntoConstraints = false
     self.tabBar = tabBar
 
-    window.addSubview(navBar)
     window.addSubview(tabBar)
     NSLayoutConstraint.activate([
-      navBar.topAnchor.constraint(equalTo: window.topAnchor),
-      navBar.leadingAnchor.constraint(equalTo: window.leadingAnchor),
-      navBar.trailingAnchor.constraint(equalTo: window.trailingAnchor),
       tabBar.leadingAnchor.constraint(equalTo: window.leadingAnchor),
       tabBar.trailingAnchor.constraint(equalTo: window.trailingAnchor),
       tabBar.bottomAnchor.constraint(equalTo: window.bottomAnchor),
     ])
 
-    setVisible(nav: wantsNav, tab: wantsTab)
+    setVisible(tab: wantsTab)
     result?(nil)
   }
 
-  private var currentItem: UINavigationItem? {
-    navigationBar?.topItem ?? navItems.first
-  }
-
   private func selectTab(_ index: Int) {
-    guard index >= 0, index < navItems.count else { return }
-    navigationBar?.setItems([navItems[index]], animated: false)
-    if let items = tabBar?.items, index < items.count {
-      tabBar?.selectedItem = items[index]
-    }
-    syncSafeArea()
+    guard let items = tabBar?.items, index >= 0, index < items.count else { return }
+    tabBar?.selectedItem = items[index]
   }
 
-  private func setVisible(nav: Bool, tab: Bool) {
-    wantsNav = nav
+  private func setVisible(tab: Bool) {
     wantsTab = tab
     guard attached else { return }
-    navigationBar?.isHidden = !nav
+    if let window = tabBar?.window ?? currentWindow() {
+      stripNavigationBars(from: window)
+    }
     tabBar?.isHidden = !tab
-    if let window = navigationBar?.window {
-      if nav, let navigationBar { window.bringSubviewToFront(navigationBar) }
-      if tab, let tabBar { window.bringSubviewToFront(tabBar) }
+    if tab, let tabBar, let window = tabBar.window {
+      window.bringSubviewToFront(tabBar)
     }
     syncSafeArea()
     DispatchQueue.main.async { [weak self] in
@@ -153,57 +122,33 @@ final class NativeChrome: NSObject, UITabBarDelegate {
     }
   }
 
+  private func stripNavigationBars(from view: UIView) {
+    for subview in view.subviews {
+      if subview is UINavigationBar {
+        subview.isHidden = true
+        subview.removeFromSuperview()
+      } else {
+        stripNavigationBars(from: subview)
+      }
+    }
+  }
+
   private func syncSafeArea() {
     guard let flutter else { return }
-    let windowInsets = flutter.view.window?.safeAreaInsets ?? flutter.view.safeAreaInsets
-    var top: CGFloat = 0
+    flutter.view.window?.layoutIfNeeded()
+    tabBar?.layoutIfNeeded()
+
     var bottom: CGFloat = 0
-    if let navigationBar, !navigationBar.isHidden {
-      top = max(0, navigationBar.frame.maxY - windowInsets.top)
-    }
+    let safe = flutter.view.window?.safeAreaInsets ?? flutter.view.safeAreaInsets
     if let tabBar, !tabBar.isHidden {
-      bottom = max(0, tabBar.frame.height - windowInsets.bottom)
+      bottom = max(0, tabBar.frame.height - safe.bottom)
     }
-    flutter.additionalSafeAreaInsets = UIEdgeInsets(top: top, left: 0, bottom: bottom, right: 0)
-  }
-
-  private var selectedIndex: Int {
-    guard let tabBar, let selected = tabBar.selectedItem else { return 0 }
-    return tabBar.items?.firstIndex(of: selected) ?? 0
-  }
-
-  private func setBackVisible(_ show: Bool) {
-    guard let item = currentItem else { return }
-    if show {
-      item.largeTitleDisplayMode = .never
-      let previous = titles[selectedIndex]
-      let back = UIBarButtonItem(
-        image: UIImage(systemName: "chevron.backward")?.withConfiguration(
-          UIImage.SymbolConfiguration(weight: .semibold)
-        ),
-        style: .plain,
-        target: self,
-        action: #selector(nativeBack)
-      )
-      back.accessibilityLabel = previous
-      item.leftBarButtonItem = back
-    } else {
-      item.largeTitleDisplayMode = .always
-      item.leftBarButtonItem = nil
-      item.hidesBackButton = true
-    }
-    syncSafeArea()
-  }
-
-  @objc private func nativeBack() {
-    channel?.invokeMethod("back", arguments: nil)
+    flutter.additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: bottom, right: 0)
   }
 
   func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
     guard let index = tabBar.items?.firstIndex(of: item) else { return }
-    navigationBar?.setItems([navItems[index]], animated: true)
     channel?.invokeMethod("tabSelected", arguments: index)
-    syncSafeArea()
   }
 
   private func tabImage(index: Int, selected: Bool) -> UIImage? {

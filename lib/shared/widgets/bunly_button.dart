@@ -36,7 +36,7 @@ class _BunlyPrimaryButtonState extends State<BunlyPrimaryButton> {
               }
             : null,
         child: AnimatedScale(
-          scale: _pressed ? 0.975 : 1,
+          scale: _pressed ? 0.97 : 1,
           duration: const Duration(milliseconds: 90),
           curve: Curves.easeOut,
           child: AnimatedOpacity(
@@ -45,19 +45,14 @@ class _BunlyPrimaryButtonState extends State<BunlyPrimaryButton> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 140),
               curve: Curves.easeOut,
-              height: 62,
+              height: 56,
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(999),
                 gradient: const LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.brandHi,
-                    AppColors.brand,
-                    AppColors.brandLo,
-                  ],
-                  stops: [0, 0.52, 1],
+                  colors: [AppColors.brandHi, AppColors.brand],
                 ),
                 boxShadow: enabled
                     ? [
@@ -137,6 +132,94 @@ class BunlyTextButton extends StatelessWidget {
               fontWeight: FontWeight.w600,
               letterSpacing: -0.1,
               color: AppColors.inkMuted,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class RescueButton extends StatefulWidget {
+  const RescueButton({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  State<RescueButton> createState() => _RescueButtonState();
+}
+
+class _RescueButtonState extends State<RescueButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+  var _pressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'I need help now',
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTapUp: (_) {
+          setState(() => _pressed = false);
+          HapticFeedback.heavyImpact();
+          widget.onPressed();
+        },
+        child: AnimatedScale(
+          scale: _pressed ? 0.97 : 1,
+          duration: const Duration(milliseconds: 90),
+          child: AnimatedBuilder(
+            animation: _pulse,
+            builder: (context, child) {
+              return Opacity(
+                opacity: 0.9 + (_pulse.value * 0.1),
+                child: child,
+              );
+            },
+            child: Container(
+              height: 64,
+              width: double.infinity,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.sos, AppColors.sosDeep, AppColors.brandLo],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.sos.withValues(alpha: 0.28),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Text(
+                'I need help now',
+                style: AppTypography.ui(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
         ),

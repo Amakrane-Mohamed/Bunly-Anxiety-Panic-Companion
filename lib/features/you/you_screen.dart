@@ -1,10 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/profile/user_plan.dart';
+import '../../core/constants/app_assets.dart';
 import '../../core/store/app_store.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
+import 'you_body.dart';
 
 class YouScreen extends StatelessWidget {
   const YouScreen({super.key});
@@ -14,107 +13,62 @@ class YouScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: AppStore.instance,
       builder: (context, _) {
-        final plan = UserPlan.instance;
-        final store = AppStore.instance;
+        final safe = MediaQuery.paddingOf(context);
 
-        return SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
+        return ColoredBox(
+          color: AppColors.home,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
+              const ExcludeSemantics(child: _NightSky()),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  '${store.handledMoments} handled · ${store.checkIns.length} check-ins',
-                  style: AppTypography.ui(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.inkMuted,
-                  ),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  safe.top + 8,
+                  16,
+                  10 + safe.bottom,
                 ),
-              ),
-              const SizedBox(height: 12),
-              CupertinoListSection.insetGrouped(
-                backgroundColor: Colors.transparent,
-                header: Text(
-                  'Companion',
-                  style: AppTypography.ui(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.inkMuted,
-                  ),
-                ),
-                children: [
-                  CupertinoListTile(
-                    title: const Text('Notifications'),
-                    subtitle: Text(plan.wantsCheckIns ? 'On' : 'Off'),
-                    trailing: const CupertinoListTileChevron(),
-                  ),
-                  const CupertinoListTile(
-                    title: Text('Panic preferences'),
-                    subtitle: Text('Breathing first'),
-                    trailing: CupertinoListTileChevron(),
-                  ),
-                  const CupertinoListTile(
-                    title: Text('Trusted contact'),
-                    subtitle: Text('Not set'),
-                    trailing: CupertinoListTileChevron(),
-                  ),
-                ],
-              ),
-              CupertinoListSection.insetGrouped(
-                backgroundColor: Colors.transparent,
-                header: Text(
-                  'Privacy & data',
-                  style: AppTypography.ui(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.inkMuted,
-                  ),
-                ),
-                children: const [
-                  CupertinoListTile(
-                    title: Text('Health'),
-                    subtitle: Text('Coming with Apple Health'),
-                    trailing: CupertinoListTileChevron(),
-                  ),
-                  CupertinoListTile(
-                    title: Text('Apple Watch'),
-                    subtitle: Text('Coming later'),
-                    trailing: CupertinoListTileChevron(),
-                  ),
-                  CupertinoListTile(
-                    title: Text('Export data'),
-                    trailing: CupertinoListTileChevron(),
-                  ),
-                ],
-              ),
-              CupertinoListSection.insetGrouped(
-                backgroundColor: Colors.transparent,
-                header: Text(
-                  'Bunly',
-                  style: AppTypography.ui(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.inkMuted,
-                  ),
-                ),
-                children: const [
-                  CupertinoListTile(
-                    title: Text('Bunly Plus'),
-                    subtitle: Text('Patterns, reports, deeper Journey'),
-                    trailing: CupertinoListTileChevron(),
-                  ),
-                  CupertinoListTile(
-                    title: Text('About'),
-                    subtitle: Text('Not a medical device'),
-                    trailing: CupertinoListTileChevron(),
-                  ),
-                ],
+                child: const YouBody(),
               ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class _NightSky extends StatelessWidget {
+  const _NightSky();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          BunlyYou.nightSky,
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          filterQuality: FilterQuality.high,
+        ),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xE6FDF2E6),
+                Color(0xB3FDF2E6),
+                Color(0x99FDF2E6),
+                Color(0xE6FDF2E6),
+                AppColors.home,
+              ],
+              stops: [0.0, 0.18, 0.42, 0.72, 1.0],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

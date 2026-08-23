@@ -1,0 +1,3 @@
+# Flutter iOS build copies Firebase plugin examples into here.
+# Cursor/Xcode then reports thousands of false errors from those samples.
+ios/build/

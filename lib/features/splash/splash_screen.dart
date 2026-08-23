@@ -42,7 +42,9 @@ class _SplashScreenState extends State<SplashScreen>
     _fill = AnimationController(vsync: this, duration: _circleDuration);
     _phrase = AnimationController(vsync: this, duration: _phraseDuration);
     _fillValue = CurvedAnimation(parent: _fill, curve: _circleCurve);
+    NativeChrome.hideTabs();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      NativeChrome.hideTabs();
       if (mounted) _play();
     });
   }
@@ -115,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen>
     return Stack(
       fit: StackFit.expand,
       children: [
-        AppShell(chromeReady: _overlayGone),
+        const AppShell(),
         if (!_overlayGone)
           AnimatedBuilder(
             animation: Listenable.merge([_icon, _fill, _phrase]),

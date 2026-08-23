@@ -43,9 +43,14 @@ flutter:
     - assets/images/bunly/activities/
     - assets/images/bunly/panic/
     - assets/images/bunly/journey/
+    - assets/images/bunly/insights/
+    - assets/images/bunly/today/
+    - assets/images/bunly/you/
+    - assets/images/bunly/cards/
     - assets/icons/
     - assets/audio/
     - assets/animations/
+    - assets/journey/
   fonts:
     - family: Plus Jakarta Sans
       fonts:

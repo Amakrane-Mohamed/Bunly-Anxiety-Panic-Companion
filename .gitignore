@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# iOS build + SPM checkouts (Firebase plugin examples pollute the IDE)
+ios/build/
+

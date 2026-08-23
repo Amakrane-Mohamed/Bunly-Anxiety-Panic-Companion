@@ -34,6 +34,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>app-1-322608639935-ios-291d68a17c041d0134fb0a</string>
+				<string>bunly</string>
 			</array>
 		</dict>
 	</array>

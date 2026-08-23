@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/platform/native_chrome.dart';
+import 'core/platform/widget_bridge.dart';
 import 'core/theme/app_theme.dart';
 import 'features/splash/splash_screen.dart';
 
@@ -17,8 +18,9 @@ class _BunlyAppState extends State<BunlyApp> {
   @override
   void initState() {
     super.initState();
-    NativeChrome.navigatorKey = appNavigatorKey;
     NativeChrome.bind();
+    WidgetBridge.bind();
+    NativeChrome.hideTabs();
   }
 
   @override

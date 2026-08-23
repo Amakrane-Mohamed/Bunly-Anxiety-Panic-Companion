@@ -6,8 +6,13 @@ abstract final class AppAssets {
     ...BunlyEmotions.all,
     ...BunlyPoses.all,
     ...BunlyActivities.all,
+    ...BunlyCards.all,
     ...BunlyPanic.all,
     ...BunlyJourney.all,
+    ...BunlyInsights.all,
+    BunlyToday.home,
+    BunlyToday.sleeping,
+    ...BunlyYou.all,
   ];
 }
 
@@ -71,6 +76,7 @@ abstract final class BunlyPoses {
 
 abstract final class BunlyPanic {
   static const String _base = 'assets/images/bunly/panic';
+  static const String helpOffice = '$_base/help_office.jpg';
   static const String readyToHelp = '$_base/ready_to_help.png';
   static const String breathing = '$_base/breathing.png';
   static const String grounding = '$_base/grounding.png';
@@ -81,6 +87,7 @@ abstract final class BunlyPanic {
   static const String recovery = '$_base/recovery.png';
 
   static const List<String> all = [
+    helpOffice,
     readyToHelp,
     breathing,
     grounding,
@@ -94,6 +101,7 @@ abstract final class BunlyPanic {
 
 abstract final class BunlyJourney {
   static const String _base = 'assets/images/bunly/journey';
+  static const String pathNight = '$_base/path_night.jpg';
   static const String firstStep = '$_base/first_step.png';
   static const String victory = '$_base/victory.png';
   static const String pathAhead = '$_base/path_ahead.png';
@@ -104,6 +112,7 @@ abstract final class BunlyJourney {
   static const String encouragement = '$_base/encouragement.png';
 
   static const List<String> all = [
+    pathNight,
     firstStep,
     victory,
     pathAhead,
@@ -113,6 +122,58 @@ abstract final class BunlyJourney {
     growth,
     encouragement,
   ];
+}
+
+abstract final class BunlyInsights {
+  static const String _base = 'assets/images/bunly/insights';
+  static const String horizon = '$_base/horizon.jpg';
+  static const String analyzing = '$_base/analyzing.png';
+  static const String thinking = '$_base/thinking.png';
+  static const String discovery = '$_base/discovery.png';
+  static const String empty = '$_base/empty.png';
+  static const String progress = '$_base/progress.png';
+  static const String lowMood = '$_base/low_mood.png';
+  static const String tracking = '$_base/tracking.png';
+
+  static const List<String> all = [
+    horizon,
+    analyzing,
+    thinking,
+    discovery,
+    empty,
+    progress,
+    lowMood,
+    tracking,
+  ];
+
+  static String forStore({
+    required bool hasCheckIns,
+    required bool hasEpisodes,
+    required bool checkedInToday,
+    required int handledMoments,
+    required int checkInCount,
+    int? latestMood,
+  }) {
+    if (!hasCheckIns && !hasEpisodes) return empty;
+    if (latestMood != null && latestMood <= 2) return lowMood;
+    if (handledMoments >= 2) return progress;
+    if (checkedInToday) return discovery;
+    if (checkInCount >= 2) return tracking;
+    if (hasEpisodes) return analyzing;
+    return thinking;
+  }
+}
+
+abstract final class BunlyToday {
+  static const String home = 'assets/images/bunly/today/home.png';
+  static const String sleeping = 'assets/images/bunly/today/sleeping.png';
+}
+
+abstract final class BunlyYou {
+  static const String _base = 'assets/images/bunly/you';
+  static const String nightSky = '$_base/night_sky.jpg';
+
+  static const List<String> all = [nightSky];
 }
 
 abstract final class BunlyActivities {
@@ -131,5 +192,24 @@ abstract final class BunlyActivities {
     detective,
     gardening,
     gifting,
+  ];
+}
+
+abstract final class BunlyCards {
+  static const String _base = 'assets/images/bunly/cards';
+  static const String curiosity = '$_base/curiosity.png';
+  static const String anxious = '$_base/anxious.png';
+  static const String problemSolver = '$_base/problem_solver.png';
+  static const String investigator = '$_base/investigator.png';
+  static const String nurturer = '$_base/nurturer.png';
+  static const String kindHeart = '$_base/kind_heart.png';
+
+  static const List<String> all = [
+    curiosity,
+    anxious,
+    problemSolver,
+    investigator,
+    nurturer,
+    kindHeart,
   ];
 }

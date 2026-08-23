@@ -1,0 +1,530 @@
+{
+  "sessions": [
+    {
+      "id": "scare",
+      "title": "Meet the scare",
+      "subtitle": "Sip the body alarm on purpose, while you’re safe.",
+      "minutes": 12,
+      "claim": "Claim",
+      "beats": [
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/journey/first_step.png",
+          "title": "This is not SOS.",
+          "body": "SOS is for a wave that is here. This is practice while the room is still a room. We sip the scare on purpose so the next one is less of a stranger. You can leave whenever. Nothing here has to be finished perfectly.",
+          "action": "I’m here for practice"
+        },
+        {
+          "kind": "choice",
+          "save": "scare",
+          "art": "assets/images/bunly/activities/thinking.png",
+          "title": "What does the scare feel like today?",
+          "body": "Pick the one your body checks for. Not the story. The sensation.",
+          "choices": [
+            {"id": "heart", "label": "This heartbeat — loud, dramatic, very extra"},
+            {"id": "breath", "label": "This breath — like it forgot its job"},
+            {"id": "dizzy", "label": "This spinny head — the room doing a little jazz"},
+            {"id": "far", "label": "This far-away feeling — me, behind glass"}
+          ]
+        },
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/panic/ready_to_help.png",
+          "title": "A body alarm is not a fire.",
+          "body": "Panic copies danger. Heart races. Breath snags. The room tilts. None of that is proof you’re dying. It’s adrenaline doing a loud job with the wrong script. Today we let it be loud in a safe room, and we stay. Staying is the whole trick.",
+          "action": "Keep going"
+        },
+        {
+          "kind": "scale",
+          "save": "fear",
+          "art": "assets/images/bunly/emotions/wow.png",
+          "title": "How loud is it right now?",
+          "body": "Not how scared you are of the next week. Just this body, this minute.",
+          "low": "Quiet",
+          "high": "Shouting"
+        },
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/journey/growth.png",
+          "title": "We sip. We don’t chug.",
+          "body": "Exposure that helps is small and chosen. Twenty seconds of heartbeat with a hand on your chest. Four puffs of air. Naming a colour. If we flood you, the scare wins the story. If we sip, your nervous system gets evidence: I met it. I am still here.",
+          "action": "Let’s sip"
+        },
+        {
+          "kind": "hold",
+          "art": "assets/images/bunly/panic/breathing.png",
+          "title": "Hand on your chest. Breathe with me.",
+          "body": "Hold the circle to breathe in. Let go for a longer out. Feel the thump, or the snag, or the float. Loud is allowed. We’re not waiting for it to be pretty."
+        },
+        {
+          "kind": "pops",
+          "art": "assets/images/bunly/panic/grounding.png",
+          "title": "Give the scare a census.",
+          "body": "Tap each one when you notice it. No fixing. Just counting what’s actually here.",
+          "pops": 5,
+          "popLabels": [
+            "A beat, a breath, or a tilt",
+            "A colour in the room",
+            "An edge — table, phone, sleeve",
+            "A sound that isn’t the scare",
+            "Your feet, somewhere on a floor"
+          ]
+        },
+        {
+          "kind": "choice",
+          "art": "assets/images/bunly/activities/thinking.png",
+          "title": "What did the scare do when you looked at it?",
+          "body": "Honest. There is no grade.",
+          "choices": [
+            {"id": "louder", "label": "It got louder. That’s allowed."},
+            {"id": "same", "label": "It stayed. I stayed too."},
+            {"id": "softer", "label": "It quieted a bit."},
+            {"id": "moved", "label": "It moved to a different place in my body."}
+          ]
+        },
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/insights/analyzing.png",
+          "title": "The story arrives next.",
+          "body": "The sensation is step one. Then the brain writes a headline: heart attack, can’t breathe, I’ll pass out in the aisle, I’ll never get back. Headlines are fast. They’re also often wrong. We don’t argue with them. We put a second line underneath: this is a body alarm. It peaks. It passes.",
+          "action": "I know that headline"
+        },
+        {
+          "kind": "choice",
+          "art": "assets/images/bunly/emotions/surprised.png",
+          "title": "Which headline is loudest today?",
+          "body": "Tap the one that shows up even when you’re safe.",
+          "choices": [
+            {"id": "dying", "label": "What if this time it’s real / I’m dying"},
+            {"id": "public", "label": "What if it happens in public and I can’t hide"},
+            {"id": "trap", "label": "What if I can’t get back / I’m stuck like this"},
+            {"id": "next", "label": "What if the next one is worse"}
+          ]
+        },
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/poses/sitting.png",
+          "title": "A thought is not a measurement.",
+          "body": "You can have the thought “I’m dying” and still be sitting on a rug, reading this, with a bunny who is slightly too proud of himself. The thought can be loud. The floor can still be a floor. Practice is collecting those two facts at the same time.",
+          "action": "Hold both"
+        },
+        {
+          "kind": "drag",
+          "art": "assets/images/bunly/poses/hugging_star.png",
+          "title": "Give your hands a job.",
+          "body": "Drag the star into the circle. One small move. The scare hates a body that has something to do besides scan."
+        },
+        {
+          "kind": "choice",
+          "art": "assets/images/bunly/journey/path_ahead.png",
+          "title": "If this peeked in a shop tomorrow…",
+          "body": "Not a vow. A draft.",
+          "choices": [
+            {"id": "sip", "label": "I’d sip it for twenty seconds, like this"},
+            {"id": "name", "label": "I’d name it: body alarm, not fire"},
+            {"id": "stay", "label": "I’d stay one extra minute before leaving"},
+            {"id": "sos", "label": "I’d open SOS if I needed a voice"}
+          ]
+        },
+        {
+          "kind": "scale",
+          "save": "fear",
+          "art": "assets/images/bunly/emotions/content.png",
+          "title": "How loud is it now?",
+          "body": "Same scale. We’re measuring, not winning.",
+          "low": "Quiet",
+          "high": "Shouting"
+        },
+        {
+          "kind": "listen",
+          "art": "assets/images/bunly/panic/easing.png",
+          "title": "Close your eyes for a few seconds.",
+          "body": "If thoughts walk by, let them. You don’t have to follow. I’m still on this side of the room.",
+          "action": "I’m back"
+        },
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/journey/encouragement.png",
+          "title": "You’ve already met it.",
+          "body": "If it comes back tomorrow, it is the same heartbeat, the same snag, the same tilt. Not a stranger. Not a test you failed. A body you’ve practiced sitting with. That’s how the next wave gets a little less cinematic.",
+          "action": "Claim this practice"
+        }
+      ]
+    },
+    {
+      "id": "life",
+      "title": "One inch of life",
+      "subtitle": "Take back one thing the next-wave fear stole.",
+      "minutes": 10,
+      "claim": "Claim",
+      "beats": [
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/journey/path_ahead.png",
+          "title": "Panic doesn’t just visit. It redraws the map.",
+          "body": "Coffee shops get dropped. Aisles get skipped. Texts stay in drafts. You call it being careful. The scare calls it a win. Today we take one inch back — not a personality reboot. One inch. You can be scared and still take it.",
+          "action": "I want an inch"
+        },
+        {
+          "kind": "choice",
+          "save": "life",
+          "art": "assets/images/bunly/activities/thinking.png",
+          "title": "Which inch did you drop?",
+          "body": "Pick the one that makes your chest do a little ‘nope’.",
+          "choices": [
+            {"id": "coffee", "label": "The coffee I ghosted — one sip, not a personality"},
+            {"id": "walk", "label": "A tiny walk — corner and back. That’s a country."},
+            {"id": "aisle", "label": "One aisle — cereal counts as bravery"},
+            {"id": "text", "label": "The text I keep rewriting — send the boring version"}
+          ]
+        },
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/insights/tracking.png",
+          "title": "Avoidance feels like relief. Then it invoices you.",
+          "body": "You leave. The scare drops. Your brain learns: leaving works. Next time the threshold is earlier. The map shrinks. Reclaiming an inch teaches the opposite: I can be in the thing and the wave can still pass. That’s why this is practice, not a dare.",
+          "action": "I see the invoice"
+        },
+        {
+          "kind": "choice",
+          "art": "assets/images/bunly/emotions/wow.png",
+          "title": "When you imagine doing it, what shows up first?",
+          "body": "The body usually answers before the plan.",
+          "choices": [
+            {"id": "heart", "label": "Heart or breath gets loud"},
+            {"id": "exit", "label": "I scan for the exit"},
+            {"id": "story", "label": "A story: I’ll lose it in front of people"},
+            {"id": "freeze", "label": "I go still and hope it passes"}
+          ]
+        },
+        {
+          "kind": "hold",
+          "art": "assets/images/bunly/panic/breathing.png",
+          "title": "Feel that, then breathe anyway.",
+          "body": "Hold to come in. Let go. We’re not waiting until you feel brave. Brave is optional. Moving one inch is the assignment."
+        },
+        {
+          "kind": "pops",
+          "art": "assets/images/bunly/journey/growth.png",
+          "title": "The inch, in three moves.",
+          "body": "You don’t have to do it this second. You do have to see the steps as real, not as a mountain.",
+          "pops": 3,
+          "popLabels": [
+            "Step 1 — start: stand up, open the chat, put on shoes, or walk in",
+            "Step 2 — stay: wait for the coffee, walk the aisle, reach the corner",
+            "Step 3 — one sip / one send / come back. Then you can leave."
+          ]
+        },
+        {
+          "kind": "choice",
+          "art": "assets/images/bunly/poses/sitting.png",
+          "title": "What would ‘done’ look like today?",
+          "body": "Shrink it until it fits in this afternoon.",
+          "choices": [
+            {"id": "half", "label": "Half of it. Doorway counts."},
+            {"id": "full", "label": "The whole inch. One sip, one aisle, one send."},
+            {"id": "with", "label": "Do it with someone who can know"},
+            {"id": "later", "label": "Set a time, then do the first step only"}
+          ]
+        },
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/activities/gardening.png",
+          "title": "If the scare shows up mid-inch.",
+          "body": "That’s not failure. That’s the assignment arriving. Name it. Feet. One more minute. Or open SOS and still count the inch as started. Leaving after a minute of staying is different from never going. Your nervous system can tell.",
+          "action": "I’ll stay one extra minute"
+        },
+        {
+          "kind": "drag",
+          "art": "assets/images/bunly/poses/hugging_star.png",
+          "title": "Park the ‘what if’ for a second.",
+          "body": "Drag the star home. The what-if can wait in the circle while you take the inch."
+        },
+        {
+          "kind": "choice",
+          "art": "assets/images/bunly/journey/milestone.png",
+          "title": "Will you do the first step after this session?",
+          "body": "Honor system. Bondly is not the police.",
+          "choices": [
+            {"id": "now", "label": "Yes — as soon as I close this"},
+            {"id": "hour", "label": "Yes — in the next hour"},
+            {"id": "today", "label": "Yes — before today ends"},
+            {"id": "honest", "label": "Not sure. I’ll sit with the idea."}
+          ]
+        },
+        {
+          "kind": "listen",
+          "art": "assets/images/bunly/emotions/content.png",
+          "title": "Imagine the doorway.",
+          "body": "Not the disaster. The doorway, the cup, the send button. Let it be ordinary. Ordinary is the point.",
+          "action": "I can see it"
+        },
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/journey/victory.png",
+          "title": "An inch is a country.",
+          "body": "You don’t get your whole life back in one afternoon. You get a coffee. A corner. A boring text. That’s how maps un-shrink. Claim this, then go do the first step if you said you would. I’ll be in the room either way.",
+          "action": "Claim this inch"
+        }
+      ]
+    },
+    {
+      "id": "ask",
+      "title": "Bondly’s questions",
+      "subtitle": "Name the pattern so the scare stops being a mystery.",
+      "minutes": 10,
+      "claim": "Claim",
+      "beats": [
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/poses/sitting.png",
+          "title": "I need a few honest answers.",
+          "body": "Not a quiz. A map. Panic loves fog. When we name what you usually do, what you skip, what you wish someone would say — the next wave has fewer places to hide. Tap what fits. No essays.",
+          "action": "Ask me"
+        },
+        {
+          "kind": "choice",
+          "art": "assets/images/bunly/activities/detective.png",
+          "title": "When the scare shows up, what do you do first?",
+          "body": "The automatic move. Not the one you wish you did.",
+          "choices": [
+            {"id": "scan", "label": "Scan my body for proof it’s dangerous"},
+            {"id": "leave", "label": "Leave whatever I’m doing"},
+            {"id": "wait", "label": "Freeze and wait for it to pass"},
+            {"id": "phone", "label": "Google symptoms or message someone"}
+          ]
+        },
+        {
+          "kind": "choice",
+          "art": "assets/images/bunly/insights/thinking.png",
+          "title": "What have you been skipping because of the next wave?",
+          "body": "This is the shrinking. We say it out loud.",
+          "choices": [
+            {"id": "out", "label": "Leaving the house / being far from home"},
+            {"id": "alone", "label": "Being alone with my body"},
+            {"id": "plans", "label": "Plans I already said yes to"},
+            {"id": "body", "label": "Exercise, coffee, anything that raises my heart"}
+          ]
+        },
+        {
+          "kind": "scale",
+          "art": "assets/images/bunly/emotions/wow.png",
+          "title": "How much is the waiting costing you this week?",
+          "body": "Waiting for the next wave. The background tab that never closes.",
+          "low": "A little",
+          "high": "Most of my day"
+        },
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/insights/discovery.png",
+          "title": "Body scanning is a job you never clock out of.",
+          "body": "Check heart. Check breath. Check if the room is real. Each check teaches the brain: there might be a fire. Practice is the opposite job: notice once, name it, come back to the room. You will still scan. We’re not firing you. We’re giving you a second shift.",
+          "action": "I scan. I know."
+        },
+        {
+          "kind": "choice",
+          "art": "assets/images/bunly/poses/hugging_star.png",
+          "title": "What would ‘safe enough’ look like for twenty seconds?",
+          "body": "Tiny. Doable in a shop.",
+          "choices": [
+            {"id": "hand", "label": "Hand on my chest"},
+            {"id": "feet", "label": "Feet heavy on the floor"},
+            {"id": "colour", "label": "Name one colour, out loud or in my head"},
+            {"id": "voice", "label": "Open Bunly / SOS and borrow a voice"}
+          ]
+        },
+        {
+          "kind": "choice",
+          "art": "assets/images/bunly/panic/staying.png",
+          "title": "If it comes back this week, what’s the plan?",
+          "body": "A plan beats a vow.",
+          "choices": [
+            {"id": "sip", "label": "Sip it like today’s practice"},
+            {"id": "minute", "label": "Stay one extra minute, then decide"},
+            {"id": "person", "label": "Tell someone who can know"},
+            {"id": "sos", "label": "Use SOS if I need a voice"}
+          ]
+        },
+        {
+          "kind": "choice",
+          "save": "ask",
+          "art": "assets/images/bunly/emotions/happy.png",
+          "title": "What do you need from me when it’s loud?",
+          "body": "I’ll remember the flavour. I’m still a bunny. I’ll try.",
+          "choices": [
+            {"id": "quiet", "label": "Just sit here. No pep talk."},
+            {"id": "name", "label": "Help me name what happened"},
+            {"id": "step", "label": "A tiny next step, not a speech"},
+            {"id": "truth", "label": "Tell me I’m not dying. Again."}
+          ]
+        },
+        {
+          "kind": "hold",
+          "art": "assets/images/bunly/panic/breathing.png",
+          "title": "One quiet breath after all that naming.",
+          "body": "Hold. Let go. You did a lot of telling the truth. That’s work."
+        },
+        {
+          "kind": "read",
+          "art": "assets/images/bunly/journey/encouragement.png",
+          "title": "The scare is less of a mystery now.",
+          "body": "You named the first move, the skipped inch, the waiting, the twenty-second plan. Next time it hits, you won’t be meeting a stranger. You’ll be meeting a pattern you’ve already sat with. That’s the whole point of this tab.",
+          "action": "Claim these answers"
+        }
+      ]
+    }
+  ],
+  "reminders": [
+    {
+      "id": "reset",
+      "title": "If it comes back, it isn’t a reset",
+      "body": "A second wave is not proof the first one ‘didn’t count’. It’s a nervous system doing a loop it already knows. You already stayed once. The second stay is not beginner mode. It’s the same floor, the same body, the same trick: name it, sip it, don’t wait to feel ready."
+    },
+    {
+      "id": "scan",
+      "title": "Checking your body is not the same as being in danger",
+      "body": "Scanning feels responsible. It is also how the alarm stays on. One check, then a colour in the room. Then the floor. You can love your body without interrogating it every thirty seconds."
+    },
+    {
+      "id": "shop",
+      "title": "Leaving the shop is allowed. Never entering is a smaller life",
+      "body": "You can go in, last one minute, and leave. That minute is data. The scare wanted you to skip the door. The door is the practice."
+    },
+    {
+      "id": "night",
+      "title": "Night thoughts are not midnight evidence",
+      "body": "At 2am the brain writes horror with the lights off. Write it down if you want. Don’t put it on trial until morning. I’m on the couch either way."
+    },
+    {
+      "id": "heart",
+      "title": "A loud heart is a drum, not a verdict",
+      "body": "Hearts sprint for stairs, coffee, crushes, and panic. Fast is not broken. Put a hand there. Count six. Let the out-breath be longer. Then look at one boring object like it owes you rent."
+    },
+    {
+      "id": "kind",
+      "title": "You don’t have to be inspired to practice",
+      "body": "Motivation is a luxury. Claim the row. Do the sip. The nervous system learns from reps, not from speeches. Bondly is not keeping a vibe score."
+    },
+    {
+      "id": "together",
+      "title": "You are not doing this as a solo sport",
+      "body": "Someone’s name lives in You. SOS lives on Today. This tab is the gym. Use all three. Panic isolates. We don’t."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "alarm",
+      "title": "The alarm is not the fire",
+      "minutes": 5,
+      "pages": [
+        {
+          "title": "The alarm is not the fire",
+          "body": "Panic is a smoke alarm with a sensitive battery. It screams. You search the house. There is no fire. The scream is still real. That’s the whole mess: real body, wrong headline.\n\nYour heart, breath, and balance system are doing emergency work. They are not philosophers. They don’t know the difference between a lion and a thought about a lion in a cereal aisle."
+        },
+        {
+          "title": "Why it feels like dying",
+          "body": "Adrenaline dumps. Blood goes to big muscles. Hands tingle. Vision tunnels. Breath goes high and fast, which makes you feel like there isn’t enough air — even when there is. The brain, helpful as a brick, says: we must be dying.\n\nYou’re not. If you were, we wouldn’t be having this essay. Still: the feeling is allowed to be huge. We don’t mock it. We don’t obey it either."
+        },
+        {
+          "title": "What practice does",
+          "body": "SOS is for the scream. Journey is for the battery. We set off a tiny alarm on purpose, stay, and let it peak without the dramatic exit. Your nervous system files a new note: we did that, and the floor stayed the floor.\n\nRead this again when the headline is loud. Then go claim Meet the scare."
+        }
+      ]
+    },
+    {
+      "id": "scan",
+      "title": "Why you keep checking your body",
+      "minutes": 4,
+      "pages": [
+        {
+          "title": "The scanner never clocks out",
+          "body": "Once a wave has happened, the body becomes a crime scene you revisit. Pulse. Breath. Am I floaty. Is that a skip. Each visit is meant to keep you safe. Each visit also says: stay on guard.\n\nThis is not a character flaw. It’s learning. The brain is trying not to get ambushed again."
+        },
+        {
+          "title": "A different job",
+          "body": "We don’t ban checking. We put a limit on the shift. One notice. Name it: heartbeat / snag / tilt. Then a colour. Then the thing you were doing.\n\nIf you check twenty times, that’s twenty rehearsals of danger. If you check once and return, that’s a rehearsal of living."
+        },
+        {
+          "title": "The trap of Google",
+          "body": "Symptom search is checking with extra panic. It almost never ends in ‘you’re fine’. It ends in a rarer disease and a louder chest. Bondly is not a doctor. Bondly is the friend who takes the phone, puts it face down, and sits."
+        }
+      ]
+    },
+    {
+      "id": "next",
+      "title": "Fear of the next wave",
+      "minutes": 5,
+      "pages": [
+        {
+          "title": "The waiting",
+          "body": "People will tell you panic is the attack. Half the suffering is the waiting. The background tab. The cancelled plan because afternoon is ‘when it happens’. The life that gets scheduled around a maybe.\n\nThat waiting is the thing this tab is built for."
+        },
+        {
+          "title": "Why the next one feels bigger",
+          "body": "Memory is a bad journalist. It keeps the peak and the shame and throws away the part where it passed. So the next wave arrives in your mind already as a catastrophe. Practice gives you a second memory: I sipped it on a Sunday and Bondly was annoying and I was still here."
+        },
+        {
+          "title": "A smaller vow",
+          "body": "Don’t vow to never fear it. Vow to meet the first twenty seconds the way you practiced. Twenty seconds is a sip. Sips stack. That’s how waiting loses the job."
+        }
+      ]
+    },
+    {
+      "id": "shrink",
+      "title": "How life gets smaller",
+      "minutes": 5,
+      "pages": [
+        {
+          "title": "The map",
+          "body": "First you skip the crowded place. Then the coffee. Then being alone in the car. Then the text. Each skip is relief. Relief teaches. The map folds.\n\nNobody chooses a smaller life on purpose. It arrives as ‘just until I feel better’. Feeling better often needs the inch, not the wait."
+        },
+        {
+          "title": "Inch, not heroics",
+          "body": "We don’t throw you into a stadium. We take the coffee you ghosted. The aisle. The boring text. If you flood, you learn the wrong lesson. If you sip the inch, you learn: I can be in my life and the scare can visit and I can still come home."
+        },
+        {
+          "title": "Claim the inch",
+          "body": "Today’s One inch of life row is not a productivity hack. It’s cartography. You’re drawing the map back in. Read this, then claim that row, then do the first step even if it is ugly."
+        }
+      ]
+    },
+    {
+      "id": "sip",
+      "title": "Practice while you’re safe",
+      "minutes": 4,
+      "pages": [
+        {
+          "title": "Wrong time, right work",
+          "body": "You cannot learn piano during a house fire. You also cannot only think about pianos and hope. Journey is the quiet room with the piano. SOS is the fire drill when the alarm is already screaming.\n\nMixing them up makes both worse. Don’t use this tab as SOS. Don’t use SOS as your only practice."
+        },
+        {
+          "title": "What ‘safe’ means",
+          "body": "Safe enough. Not zen. You can be a little wired and still sip. If you’re in a wave, go to Today. If you can read this sentence, you can probably do Meet the scare."
+        },
+        {
+          "title": "Reps",
+          "body": "One claim is a day. Days become a body that has evidence. Evidence is quieter than hope. Claim the scare row when you can. Skip when you can’t. No streak-shame. I’m not Duolingo. I’m a bunny on a rug."
+        }
+      ]
+    },
+    {
+      "id": "return",
+      "title": "Returning isn’t starting over",
+      "minutes": 4,
+      "pages": [
+        {
+          "title": "The myth of the reset",
+          "body": "A good week, then a wave, then the thought: back to zero. That’s a lie with good lighting. You didn’t lose the stays. You didn’t unlearn the floor. You had another alarm. Alarms repeat. That’s their job."
+        },
+        {
+          "title": "What to do with the second one",
+          "body": "Same sip. Same name. Same extra minute. If it feels harder, that’s fatigue, not failure. Drink water. Text the someone in You. Open SOS if you need a voice. Then come back here tomorrow and claim a row anyway."
+        },
+        {
+          "title": "I’m still here",
+          "body": "That’s the lesson. Not ‘never again’. ‘Again, and I’m still here.’ Claim this lesson. Then go do something tiny and ordinary. Ordinary is the medicine the scare doesn’t understand."
+        }
+      ]
+    }
+  ]
+}
