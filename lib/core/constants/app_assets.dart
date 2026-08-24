@@ -1,5 +1,5 @@
 abstract final class AppAssets {
-  static const String bunlyIcon = 'assets/images/iconapp2.jpeg';
+  static const String bunlyIcon = 'assets/images/app_icon.png';
   static const String googleG = 'assets/icons/google_g.png';
 
   static const List<String> allBunly = [

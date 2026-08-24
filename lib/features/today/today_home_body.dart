@@ -9,6 +9,7 @@ import '../../core/store/app_store.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_card.dart';
+import '../convert/paywall_screen.dart';
 import '../panic/panic_entry_sheet.dart';
 import '../talk/talk_screen.dart';
 
@@ -195,7 +196,9 @@ class _ActionCard extends StatefulWidget {
 class _ActionCardState extends State<_ActionCard> {
   var _pressed = false;
 
-  void _open() {
+  Future<void> _open() async {
+    if (!await PaywallScreen.require(context)) return;
+    if (!mounted) return;
     if (widget.onHelp) {
       PanicEntrySheet.help(context);
       return;

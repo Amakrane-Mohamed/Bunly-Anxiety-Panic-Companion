@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -5,10 +7,57 @@ import '../../core/audio/app_audio.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/profile/user_plan.dart';
+import '../../core/store/local_disk.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
 import '../../shared/widgets/talk_bubble.dart';
+import 'doctor_checkin_screen.dart';
+
+class ProfileSetupScreen extends StatelessWidget {
+  const ProfileSetupScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: AppColors.canvas,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.canvas,
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.washTop,
+                    Color(0xFFF8F3FC),
+                    Color(0xFFFFFFFF),
+                  ],
+                  stops: [0, 0.38, 1],
+                ),
+              ),
+            ),
+            ProfileSetupOverlay(
+              onDone: () {
+                Navigator.of(context).pushReplacement(
+                  AppMotion.fadeTo(const DoctorCheckInScreen()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 enum _ProfileStep { birthday, pronouns, name }
 
@@ -187,6 +236,7 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
         plan.name = _name.text.trim();
         plan.pronoun = _pronoun ?? 'they';
         plan.birthday = _birthday;
+        unawaited(LocalDisk.writePlan());
         if (MediaQuery.disableAnimationsOf(context)) {
           widget.onDone();
           return;

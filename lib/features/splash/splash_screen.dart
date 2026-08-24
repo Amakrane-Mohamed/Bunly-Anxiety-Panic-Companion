@@ -3,11 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/access/access.dart';
+import '../../core/audio/app_audio.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/platform/native_chrome.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
 import '../shell/app_shell.dart';
+import '../welcome/welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -22,25 +24,18 @@ class _SplashScreenState extends State<SplashScreen>
   static const _iconHold = Duration(milliseconds: 700);
   static const _iconOutDuration = Duration(milliseconds: 220);
   static const _circleDuration = Duration(milliseconds: 1100);
-  static const _phraseDuration = Duration(milliseconds: 640);
-  static const _holdDuration = Duration(seconds: 3);
-  static const _phraseOutDuration = Duration(milliseconds: 360);
   static const _circleCurve = Cubic(0.4, 0.0, 0.2, 1.0);
 
   late final AnimationController _icon;
   late final AnimationController _fill;
-  late final AnimationController _phrase;
   late final Animation<double> _fillValue;
-
-  var _baseGone = false;
-  var _overlayGone = false;
+  var _left = false;
 
   @override
   void initState() {
     super.initState();
     _icon = AnimationController(vsync: this, duration: _iconInDuration);
     _fill = AnimationController(vsync: this, duration: _circleDuration);
-    _phrase = AnimationController(vsync: this, duration: _phraseDuration);
     _fillValue = CurvedAnimation(parent: _fill, curve: _circleCurve);
     NativeChrome.hideTabs();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -55,13 +50,8 @@ class _SplashScreenState extends State<SplashScreen>
     if (reduced) {
       _icon.value = 0;
       _fill.value = 1;
-      _phrase.value = 1;
-      _baseGone = true;
-      await Future<void>.delayed(_holdDuration);
       if (!mounted) return;
-      _phrase.value = 0;
-      _fill.value = 0;
-      _showApp();
+      await _leave();
       return;
     }
 
@@ -76,34 +66,34 @@ class _SplashScreenState extends State<SplashScreen>
     await _fill.forward();
     if (!mounted) return;
 
-    _baseGone = true;
-
-    await _phrase.forward();
-    if (!mounted) return;
-
-    await Future<void>.delayed(_holdDuration);
-    if (!mounted) return;
-
-    _phrase.duration = _phraseOutDuration;
-    await _phrase.reverse();
-    if (!mounted) return;
-
-    await _fill.reverse();
-    if (!mounted) return;
-
-    _showApp();
+    await _leave();
   }
 
-  void _showApp() {
-    setState(() => _overlayGone = true);
-    NativeChrome.reveal();
+  Future<void> _leave() async {
+    if (_left) return;
+    _left = true;
+    NativeChrome.hideTabs();
+    if (!mounted) return;
+    final Widget next;
+    if (Access.instance.onboarded) {
+      AppAudio.stopMusic();
+      next = const AppShell();
+    } else {
+      next = const WelcomeScreen();
+    }
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder<void>(
+        pageBuilder: (_, _, _) => next,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
   }
 
   @override
   void dispose() {
     _icon.dispose();
     _fill.dispose();
-    _phrase.dispose();
     super.dispose();
   }
 
@@ -114,69 +104,62 @@ class _SplashScreenState extends State<SplashScreen>
       size.width * size.width + size.height * size.height,
     );
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const AppShell(),
-        if (!_overlayGone)
+    return Scaffold(
+      backgroundColor: AppColors.splash,
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          const ColoredBox(
+            color: AppColors.splash,
+            child: SizedBox.expand(),
+          ),
           AnimatedBuilder(
-            animation: Listenable.merge([_icon, _fill, _phrase]),
-            builder: (context, _) {
-              final onPurple = !_baseGone || _fillValue.value > 0.42;
-              return AnnotatedRegion<SystemUiOverlayStyle>(
-                value: onPurple
-                    ? SystemUiOverlayStyle.light.copyWith(
-                        statusBarColor: Colors.transparent,
-                        systemNavigationBarColor: AppColors.splash,
-                        systemNavigationBarIconBrightness: Brightness.light,
-                      )
-                    : SystemUiOverlayStyle.dark.copyWith(
-                        statusBarColor: Colors.transparent,
-                        systemNavigationBarColor: AppColors.canvas,
-                        systemNavigationBarIconBrightness: Brightness.dark,
-                      ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    if (!_baseGone)
+              animation: Listenable.merge([_icon, _fill]),
+              builder: (context, _) {
+                return AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: SystemUiOverlayStyle.light.copyWith(
+                    statusBarColor: Colors.transparent,
+                    systemNavigationBarColor: AppColors.splash,
+                    systemNavigationBarIconBrightness: Brightness.light,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
                       const ColoredBox(
                         color: AppColors.splash,
                         child: SizedBox.expand(),
                       ),
-                    Opacity(
-                      opacity: _icon.value,
-                      child: Transform.scale(
-                        scale: 0.92 + (0.08 * _icon.value),
-                        child: const _SplashIcon(),
-                      ),
-                    ),
-                    OverflowBox(
-                      maxWidth: diameter,
-                      maxHeight: diameter,
-                      child: RepaintBoundary(
+                      Opacity(
+                        opacity: _icon.value,
                         child: Transform.scale(
-                          scale: _fillValue.value,
-                          child: Container(
-                            width: diameter,
-                            height: diameter,
-                            decoration: const BoxDecoration(
-                              color: AppColors.breath,
-                              shape: BoxShape.circle,
+                          scale: 0.92 + (0.08 * _icon.value),
+                          child: const _SplashIcon(),
+                        ),
+                      ),
+                      OverflowBox(
+                        maxWidth: diameter,
+                        maxHeight: diameter,
+                        child: RepaintBoundary(
+                          child: Transform.scale(
+                            scale: _fillValue.value,
+                            child: Container(
+                              width: diameter,
+                              height: diameter,
+                              decoration: const BoxDecoration(
+                                color: AppColors.breath,
+                                shape: BoxShape.circle,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    ExcludeSemantics(
-                      excluding: _phrase.value == 0,
-                      child: _BreathPhrase(progress: _phrase.value),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-      ],
+                    ],
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 }
@@ -193,42 +176,6 @@ class _SplashIcon extends StatelessWidget {
         width: 118,
         height: 118,
         fit: BoxFit.cover,
-      ),
-    );
-  }
-}
-
-class _BreathPhrase extends StatelessWidget {
-  const _BreathPhrase({required this.progress});
-
-  final double progress;
-
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: progress.clamp(0.0, 1.0),
-      child: Transform.translate(
-        offset: Offset(0, 10 * (1 - progress)),
-        child: Semantics(
-          liveRegion: true,
-          label: 'take a deep breath',
-          child: Text(
-            'take a deep breath',
-            textAlign: TextAlign.center,
-            style:
-                AppTypography.display(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
-                  letterSpacing: -0.5,
-                  color: AppColors.onBrand,
-                ).copyWith(
-                  decoration: TextDecoration.none,
-                  decorationColor: Colors.transparent,
-                  shadows: const [],
-                ),
-          ),
-        ),
       ),
     );
   }

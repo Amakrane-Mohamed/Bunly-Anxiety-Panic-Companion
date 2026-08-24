@@ -4,37 +4,62 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/access/access.dart';
 import '../../core/audio/app_audio.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/motion/app_motion.dart';
+import '../../core/platform/native_chrome.dart';
+import '../../core/profile/user_plan.dart';
+import '../../core/purchases/purchases_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
-import '../../shared/widgets/bunly_button.dart';
 import '../../shared/widgets/fade_up.dart';
 import '../home/home_screen.dart';
 
 enum _PayPlan { yearly, monthly }
 
 class PaywallScreen extends StatefulWidget {
-  const PaywallScreen({super.key});
+  const PaywallScreen({super.key, this.asGate = false});
+
+  final bool asGate;
+
+  static Future<void> open(BuildContext context) async {
+    if (Access.instance.unlocked) return;
+    await NativeChrome.hideForPanic();
+    if (!context.mounted) {
+      await NativeChrome.showRoot();
+      return;
+    }
+    try {
+      await Navigator.of(context, rootNavigator: true).push<void>(
+        AppMotion.fadeTo(const PaywallScreen(asGate: true)),
+      );
+    } finally {
+      await NativeChrome.showRoot();
+    }
+  }
+
+  static Future<bool> require(BuildContext context) async {
+    if (Access.instance.unlocked) return true;
+    await open(context);
+    return Access.instance.unlocked;
+  }
 
   @override
   State<PaywallScreen> createState() => _PaywallScreenState();
 }
 
 class _PaywallScreenState extends State<PaywallScreen>
-    with SingleTickerProviderStateMixin {
-  static const _lines = [
-    'When a wave hits, I’m right here.',
-    'Calm moments, anytime you need.',
-    'A companion that stays close.',
-    'A plan made just for you.',
-  ];
+    with TickerProviderStateMixin {
+  static const _night = Color(0xFF1A1040);
+  static const _violet = Color(0xFF5B38AC);
 
   AnimationController? _closeIn;
+  AnimationController? _breathe;
   Timer? _closeTimer;
 
   var _plan = _PayPlan.yearly;
+  var _busy = false;
 
   AnimationController get _closeAnimation {
     return _closeIn ??= AnimationController(
@@ -43,11 +68,19 @@ class _PaywallScreenState extends State<PaywallScreen>
     );
   }
 
+  AnimationController get _breatheAnimation {
+    return _breathe ??= AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 16),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     _closeAnimation;
     AppAudio.stopMusic();
+    unawaited(PurchasesService.instance.refresh());
     _closeTimer = Timer(const Duration(seconds: 3), () {
       if (!mounted) return;
       if (MediaQuery.disableAnimationsOf(context)) {
@@ -56,12 +89,21 @@ class _PaywallScreenState extends State<PaywallScreen>
       }
       _closeAnimation.forward();
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (MediaQuery.disableAnimationsOf(context)) {
+        _breatheAnimation.value = 0.5;
+        return;
+      }
+      _breatheAnimation.repeat(reverse: true);
+    });
   }
 
   @override
   void dispose() {
     _closeTimer?.cancel();
     _closeIn?.dispose();
+    _breathe?.dispose();
     super.dispose();
   }
 
@@ -72,180 +114,273 @@ class _PaywallScreenState extends State<PaywallScreen>
     ).pushAndRemoveUntil(AppMotion.fadeTo(const HomeScreen()), (_) => false);
   }
 
+  void _unlocked() {
+    HapticFeedback.mediumImpact();
+    if (widget.asGate) {
+      Navigator.of(context).pop();
+      return;
+    }
+    _enterHome();
+  }
+
+  void _dismiss() {
+    if (widget.asGate) {
+      Navigator.of(context).pop();
+      return;
+    }
+    _enterHome();
+  }
+
+  void _toast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> _buy() async {
+    if (_busy) return;
+    final purchases = PurchasesService.instance;
+    if (!purchases.ready) {
+      _toast('Add your RevenueCat Apple API key, then try again.');
+      return;
+    }
+    setState(() => _busy = true);
+    final package = _plan == _PayPlan.yearly
+        ? purchases.annualPackage
+        : purchases.monthlyPackage;
+    if (package == null) {
+      setState(() => _busy = false);
+      _toast('Add bunly_annual / bunly_monthly in RevenueCat, then try again.');
+      return;
+    }
+    final ok = await purchases.purchase(package);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok || purchases.isPro) {
+      _unlocked();
+      return;
+    }
+    if (purchases.lastError != null) {
+      _toast('Couldn’t complete the purchase.');
+    }
+  }
+
+  Future<void> _restore() async {
+    HapticFeedback.selectionClick();
+    final purchases = PurchasesService.instance;
+    if (!purchases.ready) {
+      _toast('Paste your RevenueCat Apple API key first.');
+      return;
+    }
+    setState(() => _busy = true);
+    final ok = await purchases.restore();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok) {
+      _unlocked();
+      return;
+    }
+    _toast('No active subscription on this Apple ID.');
+  }
+
+  Future<void> _openTester() async {
+    HapticFeedback.selectionClick();
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.46),
+      builder: (context) => const _TesterDialog(),
+    );
+    if (ok == true && mounted) _unlocked();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final yearly = _plan == _PayPlan.yearly;
-    final imageHeight = size.height * (size.height < 740 ? 0.24 : 0.28);
+    final name = UserPlan.instance.firstName;
+    final promise = UserPlan.instance.paywallPromise;
 
     return PopScope(
       canPop: false,
       child: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark.copyWith(
+        value: SystemUiOverlayStyle.light.copyWith(
           statusBarColor: Colors.transparent,
-          systemNavigationBarColor: AppColors.canvas,
-          systemNavigationBarIconBrightness: Brightness.dark,
+          systemNavigationBarColor: _violet,
+          systemNavigationBarIconBrightness: Brightness.light,
         ),
         child: Scaffold(
-          backgroundColor: AppColors.canvas,
-          body: Column(
+          backgroundColor: _night,
+          body: Stack(
+            fit: StackFit.expand,
             children: [
-              SizedBox(
-                height: imageHeight,
-                width: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.asset(
-                      OnboardingArt.paywall,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                      filterQuality: FilterQuality.high,
-                    ),
-                    const IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0x00FFFFFF),
-                              Color(0x00FFFFFF),
-                              Color(0xA3FFFFFF),
-                              AppColors.canvas,
-                            ],
-                            stops: [0, 0.52, 0.8, 1],
-                          ),
-                        ),
-                      ),
-                    ),
-                    AnimatedBuilder(
-                      animation: _closeAnimation,
-                      builder: (context, child) {
-                        return IgnorePointer(
-                          ignoring: _closeAnimation.value < 0.2,
-                          child: FadeTransition(
-                            opacity: _closeAnimation,
-                            child: ScaleTransition(
-                              scale: Tween<double>(begin: 0.86, end: 1).animate(
-                                CurvedAnimation(
-                                  parent: _closeAnimation,
-                                  curve: const Cubic(0.16, 1, 0.3, 1),
-                                ),
-                              ),
-                              child: child,
-                            ),
-                          ),
-                        );
-                      },
-                      child: SafeArea(
-                        bottom: false,
-                        child: Align(
-                          alignment: Alignment.topLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                            child: _LiquidGlassClose(onTap: _enterHome),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+              AnimatedBuilder(
+                animation: _breatheAnimation,
+                builder: (context, child) {
+                  final t = Curves.easeInOut.transform(_breatheAnimation.value);
+                  return Transform.scale(
+                    scale: 1.04 + (t * 0.05),
+                    alignment: const Alignment(0, -0.2),
+                    child: child,
+                  );
+                },
+                child: Image.asset(
+                  OnboardingArt.paywall,
+                  fit: BoxFit.cover,
+                  alignment: const Alignment(0, -0.12),
+                  filterQuality: FilterQuality.high,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(28, 0, 28, 0),
-                child: FadeUp(
-                  child: Text.rich(
-                    TextSpan(
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x3308142A),
+                      Color(0x00000000),
+                      Color(0x00000000),
+                      Color(0xA62A1458),
+                      Color(0xF25B38AC),
+                    ],
+                    stops: [0, 0.22, 0.46, 0.68, 1],
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                    child: Row(
                       children: [
-                        TextSpan(
-                          text: 'Keep Bunly beside you ',
+                        SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: AnimatedBuilder(
+                            animation: _closeAnimation,
+                            builder: (context, child) {
+                              return IgnorePointer(
+                                ignoring: _closeAnimation.value < 0.2,
+                                child: FadeTransition(
+                                  opacity: _closeAnimation,
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: _GlassClose(onTap: _dismiss),
+                          ),
+                        ),
+                        const Spacer(),
+                        _TestChip(onTap: _openTester),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 10 + bottomInset),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FadeUp(
+                        child: Text(
+                          promise,
+                          textAlign: TextAlign.center,
                           style: AppTypography.display(
                             fontSize: 28,
                             fontWeight: FontWeight.w800,
-                            height: 1.18,
-                            letterSpacing: -0.6,
-                            color: AppColors.brand,
+                            height: 1.15,
+                            letterSpacing: -0.7,
+                            color: Colors.white,
                           ),
                         ),
-                        TextSpan(
-                          text: '✨',
-                          style: AppTypography.display(
-                            fontSize: 26,
-                            height: 1.18,
-                          ),
-                        ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: FadeUp(
-                  delay: const Duration(milliseconds: 80),
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < _lines.length; i++) ...[
-                        if (i > 0) const SizedBox(height: 10),
-                        Text(
-                          _lines[i],
+                      ),
+                      const SizedBox(height: 8),
+                      FadeUp(
+                        delay: const Duration(milliseconds: 80),
+                        child: Text(
+                          name == 'friend'
+                              ? 'Bondly stays when a wave comes.'
+                              : 'Bondly stays with you, $name.',
                           textAlign: TextAlign.center,
                           style: AppTypography.ui(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                             height: 1.35,
-                            color: AppColors.brand,
+                            color: Colors.white.withValues(alpha: 0.82),
                           ),
                         ),
-                      ],
+                      ),
+                      const SizedBox(height: 22),
+                      FadeUp(
+                        delay: const Duration(milliseconds: 140),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _PlanCard(
+                                title: 'Yearly',
+                                price: '\$39.99',
+                                detail: '\$3.33 / month',
+                                badge: 'Save 65%',
+                                selected: yearly,
+                                onTap: () =>
+                                    setState(() => _plan = _PayPlan.yearly),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _PlanCard(
+                                title: 'Monthly',
+                                price: '\$9.99',
+                                detail: 'billed monthly',
+                                selected: !yearly,
+                                onTap: () =>
+                                    setState(() => _plan = _PayPlan.monthly),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      FadeUp(
+                        delay: const Duration(milliseconds: 220),
+                        child: _SubscribeButton(
+                          label: _busy
+                              ? 'One moment…'
+                              : yearly
+                              ? 'Start 7 days free'
+                              : 'Continue',
+                          onPressed: _busy ? null : _buy,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      FadeUp(
+                        delay: const Duration(milliseconds: 280),
+                        child: GestureDetector(
+                          onTap: () {
+                            if (!_busy) _restore();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Text(
+                              'Restore purchases',
+                              style: AppTypography.ui(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white.withValues(alpha: 0.72),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ),
-              const Spacer(),
-              Padding(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 8 + bottomInset),
-                child: Column(
-                  children: [
-                    FadeUp(
-                      delay: const Duration(milliseconds: 140),
-                      child: _OfferRow(
-                        title: 'Annual',
-                        price: '\$39.99',
-                        detail: '\$3.33/mo',
-                        badge: '65% OFF',
-                        selected: yearly,
-                        onTap: () => setState(() => _plan = _PayPlan.yearly),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    FadeUp(
-                      delay: const Duration(milliseconds: 180),
-                      child: _OfferRow(
-                        title: 'Monthly',
-                        price: '\$9.99',
-                        detail: 'billed monthly',
-                        selected: !yearly,
-                        onTap: () => setState(() => _plan = _PayPlan.monthly),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    FadeUp(
-                      delay: const Duration(milliseconds: 220),
-                      child: BunlyPrimaryButton(
-                        label: yearly ? 'Start 7 days free' : 'Subscribe now',
-                        onPressed: _enterHome,
-                      ),
-                    ),
-                    BunlyTextButton(
-                      label: 'Restore Purchases',
-                      onPressed: () => HapticFeedback.selectionClick(),
-                    ),
-                  ],
                 ),
               ),
             ],
@@ -256,8 +391,8 @@ class _PaywallScreenState extends State<PaywallScreen>
   }
 }
 
-class _OfferRow extends StatelessWidget {
-  const _OfferRow({
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({
     required this.title,
     required this.price,
     required this.detail,
@@ -275,116 +410,223 @@ class _OfferRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        AppAudio.answer();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        height: 64,
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.optionSelected : Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: selected ? AppColors.brand : AppColors.optionLine,
-            width: selected ? 1.8 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: selected ? AppColors.brand : Colors.transparent,
-                border: Border.all(
-                  color: selected ? AppColors.brand : AppColors.optionLine,
-                  width: 1.6,
-                ),
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: title,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          AppAudio.answer();
+          onTap();
+        },
+        child: AnimatedScale(
+          scale: selected ? 1 : 0.97,
+          duration: const Duration(milliseconds: 220),
+          curve: const Cubic(0.22, 1, 0.36, 1),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            height: 148,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: selected
+                  ? Colors.white.withValues(alpha: 0.22)
+                  : Colors.white.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: selected
+                    ? Colors.white.withValues(alpha: 0.72)
+                    : Colors.white.withValues(alpha: 0.16),
+                width: selected ? 1.5 : 1,
               ),
-              child: selected
-                  ? const Icon(
-                      Icons.check_rounded,
-                      size: 14,
-                      color: Colors.white,
-                    )
-                  : null,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Row(
-                children: [
-                  Text(
-                    title,
-                    style: AppTypography.ui(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.ink,
-                    ),
-                  ),
-                  if (badge != null) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.brand,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        badge!,
-                        style: AppTypography.ui(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.2,
-                          color: Colors.white,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: AppTypography.ui(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white.withValues(alpha: 0.94),
+                            ),
+                          ),
                         ),
+                        _SelectDot(selected: selected),
+                      ],
+                    ),
+                    if (badge != null) ...[
+                      const SizedBox(height: 8),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(
+                            alpha: selected ? 0.22 : 0.12,
+                          ),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          child: Text(
+                            badge!,
+                            style: AppTypography.ui(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.2,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ] else
+                      const SizedBox(height: 8),
+                    const Spacer(),
+                    Text(
+                      price,
+                      style: AppTypography.display(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.6,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      detail,
+                      style: AppTypography.ui(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  price,
-                  style: AppTypography.ui(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
-                    color: AppColors.ink,
-                  ),
-                ),
-                Text(
-                  detail,
-                  style: AppTypography.ui(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.inkMuted,
-                  ),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _LiquidGlassClose extends StatelessWidget {
-  const _LiquidGlassClose({required this.onTap});
+class _SelectDot extends StatelessWidget {
+  const _SelectDot({required this.selected});
+
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: 20,
+      height: 20,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: selected ? Colors.white : Colors.transparent,
+        border: Border.all(
+          color: selected
+              ? Colors.white
+              : Colors.white.withValues(alpha: 0.45),
+          width: 1.5,
+        ),
+      ),
+      child: selected
+          ? const Icon(
+              Icons.check_rounded,
+              size: 13,
+              color: Color(0xFF5B38AC),
+            )
+          : null,
+    );
+  }
+}
+
+class _SubscribeButton extends StatefulWidget {
+  const _SubscribeButton({required this.label, this.onPressed});
+
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  State<_SubscribeButton> createState() => _SubscribeButtonState();
+}
+
+class _SubscribeButtonState extends State<_SubscribeButton> {
+  var _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onPressed != null;
+
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: widget.label,
+      child: GestureDetector(
+        onTapDown: enabled ? (_) => setState(() => _pressed = true) : null,
+        onTapCancel: enabled ? () => setState(() => _pressed = false) : null,
+        onTapUp: enabled
+            ? (_) {
+                setState(() => _pressed = false);
+                HapticFeedback.lightImpact();
+                widget.onPressed?.call();
+              }
+            : null,
+        child: AnimatedScale(
+          scale: _pressed ? 0.975 : 1,
+          duration: const Duration(milliseconds: 90),
+          curve: Curves.easeOut,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 140),
+            opacity: enabled ? 1 : 0.45,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                color: const Color(0xFFFDF2E6),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.22),
+                    blurRadius: _pressed ? 10 : 24,
+                    offset: Offset(0, _pressed ? 4 : 10),
+                  ),
+                ],
+              ),
+              child: SizedBox(
+                height: 58,
+                width: double.infinity,
+                child: Center(
+                  child: Text(
+                    widget.label,
+                    style: AppTypography.ui(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GlassClose extends StatelessWidget {
+  const _GlassClose({required this.onTap});
 
   final VoidCallback onTap;
 
@@ -395,62 +637,75 @@ class _LiquidGlassClose extends StatelessWidget {
       label: 'Close',
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.white.withValues(alpha: 0.28),
-                blurRadius: 12,
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.16),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: ClipOval(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.62),
-                      Colors.white.withValues(alpha: 0.20),
-                      const Color(0xFFD4C2F0).withValues(alpha: 0.20),
-                    ],
-                    stops: const [0, 0.55, 1],
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    width: 1.1,
-                  ),
+        child: ClipOval(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.16),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.34),
                 ),
-                child: Stack(
-                  fit: StackFit.expand,
+              ),
+              child: const SizedBox(
+                width: 40,
+                height: 40,
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TestChip extends StatelessWidget {
+  const _TestChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Test',
+      child: GestureDetector(
+        onTap: onTap,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.34),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.center,
-                          colors: [Color(0x73FFFFFF), Color(0x00FFFFFF)],
-                        ),
-                      ),
+                    const Icon(
+                      Icons.science_outlined,
+                      size: 16,
+                      color: Colors.white,
                     ),
-                    Center(
-                      child: Icon(
-                        Icons.close_rounded,
-                        size: 18,
-                        color: const Color(0xFF1C1529).withValues(alpha: 0.82),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Test',
+                      style: AppTypography.ui(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -458,6 +713,143 @@ class _LiquidGlassClose extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TesterDialog extends StatefulWidget {
+  const _TesterDialog();
+
+  @override
+  State<_TesterDialog> createState() => _TesterDialogState();
+}
+
+class _TesterDialogState extends State<_TesterDialog> {
+  late final TextEditingController _code;
+  var _wrong = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _code = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_code.text.trim() != Access.testerCode) {
+      HapticFeedback.heavyImpact();
+      setState(() => _wrong = true);
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    await Access.instance.enableTester();
+    if (mounted) Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: const Color(0xFFFDF8F2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Tester access',
+              style: AppTypography.display(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: AppColors.ink,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Enter the code to open the whole app.',
+              style: AppTypography.ui(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.inkMuted,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _code,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              obscureText: true,
+              maxLength: 4,
+              onChanged: (_) {
+                if (_wrong) setState(() => _wrong = false);
+              },
+              onSubmitted: (_) => _submit(),
+              style: AppTypography.ui(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 8,
+                color: AppColors.ink,
+              ),
+              decoration: InputDecoration(
+                counterText: '',
+                hintText: '••••',
+                filled: true,
+                fillColor: Colors.white,
+                errorText: _wrong ? 'That’s not the code.' : null,
+                contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            GestureDetector(
+              onTap: _submit,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.brand,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Text(
+                    'Open the app',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.ui(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(false),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Text(
+                  'Cancel',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.ui(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.inkMuted,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

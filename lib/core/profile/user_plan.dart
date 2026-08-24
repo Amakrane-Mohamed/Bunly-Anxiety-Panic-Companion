@@ -13,6 +13,42 @@ class UserPlan {
   double waiting = 0.5;
   var wantsCheckIns = false;
 
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'pronoun': pronoun,
+      'birthday': birthday?.millisecondsSinceEpoch,
+      'hardest': hardest,
+      'feelsLike': feelsLike,
+      'wish': wish,
+      'win': win,
+      'heaviness': heaviness,
+      'waiting': waiting,
+      'wantsCheckIns': wantsCheckIns,
+    };
+  }
+
+  void readJson(Map<String, dynamic> json) {
+    name = json['name'] as String? ?? name;
+    pronoun = json['pronoun'] as String? ?? pronoun;
+    final birthdayMs = json['birthday'];
+    if (birthdayMs is int) {
+      birthday = DateTime.fromMillisecondsSinceEpoch(birthdayMs);
+    }
+    hardest = _strings(json['hardest']);
+    feelsLike = _strings(json['feelsLike']);
+    wish = _strings(json['wish']);
+    win = _strings(json['win']);
+    heaviness = (json['heaviness'] as num?)?.toDouble() ?? heaviness;
+    waiting = (json['waiting'] as num?)?.toDouble() ?? waiting;
+    wantsCheckIns = json['wantsCheckIns'] as bool? ?? wantsCheckIns;
+  }
+
+  static List<String> _strings(Object? value) {
+    if (value is! List) return const [];
+    return value.whereType<String>().toList();
+  }
+
   String get displayName {
     final trimmed = name.trim();
     return trimmed.isEmpty ? 'friend' : trimmed;

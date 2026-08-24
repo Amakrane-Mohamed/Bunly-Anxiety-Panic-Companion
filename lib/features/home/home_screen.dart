@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/access/access.dart';
 import '../../core/audio/app_audio.dart';
 import '../../core/theme/app_colors.dart';
 import '../shell/app_shell.dart';
@@ -17,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     AppAudio.stopMusic();
+    Access.instance.markOnboarded();
   }
 
   @override

@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../constants/app_assets.dart';
 import '../platform/widget_bridge.dart';
+import '../profile/user_plan.dart';
+import 'local_disk.dart';
 
 enum CheckInSlot { morning, evening }
 
@@ -19,6 +23,27 @@ class DailyCheckIn {
   final int mood;
   final int stress;
   final CheckInSlot slot;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'date': date.millisecondsSinceEpoch,
+      'mood': mood,
+      'stress': stress,
+      'slot': slot.name,
+    };
+  }
+
+  factory DailyCheckIn.fromJson(Map<String, dynamic> json) {
+    return DailyCheckIn(
+      date: DateTime.fromMillisecondsSinceEpoch(json['date'] as int),
+      mood: json['mood'] as int? ?? 3,
+      stress: json['stress'] as int? ?? 3,
+      slot: CheckInSlot.values.firstWhere(
+        (item) => item.name == json['slot'],
+        orElse: () => CheckInSlot.morning,
+      ),
+    );
+  }
 
   String get feelingLine {
     final score = '${mood * 2}/10';
@@ -44,6 +69,22 @@ class ThanksNote {
   final String id;
   final String text;
   final DateTime at;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'text': text,
+      'at': at.millisecondsSinceEpoch,
+    };
+  }
+
+  factory ThanksNote.fromJson(Map<String, dynamic> json) {
+    return ThanksNote(
+      id: json['id'] as String? ?? '${json['at']}',
+      text: json['text'] as String? ?? '',
+      at: DateTime.fromMillisecondsSinceEpoch(json['at'] as int),
+    );
+  }
 }
 
 class PanicEpisode {
@@ -65,6 +106,32 @@ class PanicEpisode {
   String? avoiding;
   final List<String> toolsUsed;
 
+  Map<String, dynamic> toJson() {
+    return {
+      'startedAt': startedAt.millisecondsSinceEpoch,
+      'endedAt': endedAt?.millisecondsSinceEpoch,
+      'comingOn': comingOn,
+      'intensityAfter': intensityAfter,
+      'activity': activity,
+      'avoiding': avoiding,
+      'toolsUsed': toolsUsed,
+    };
+  }
+
+  factory PanicEpisode.fromJson(Map<String, dynamic> json) {
+    return PanicEpisode(
+      startedAt: DateTime.fromMillisecondsSinceEpoch(json['startedAt'] as int),
+      endedAt: json['endedAt'] is int
+          ? DateTime.fromMillisecondsSinceEpoch(json['endedAt'] as int)
+          : null,
+      comingOn: json['comingOn'] as bool? ?? false,
+      intensityAfter: json['intensityAfter'] as int?,
+      activity: json['activity'] as String?,
+      avoiding: json['avoiding'] as String?,
+      toolsUsed: (json['toolsUsed'] as List?)?.whereType<String>().toList(),
+    );
+  }
+
   Duration? get recovery {
     final end = endedAt;
     if (end == null) return null;
@@ -76,15 +143,157 @@ class AppStore extends ChangeNotifier {
   AppStore._();
   static final AppStore instance = AppStore._();
 
+  var _hydrating = false;
+  Timer? _saveTimer;
+
   @override
   void notifyListeners() {
     super.notifyListeners();
-    WidgetBridge.sync(
-      hearts: hearts,
-      streak: checkInStreak,
-      line: bunlyLine,
-      practicedToday: practicedOn(dateOnly(DateTime.now())),
-    );
+    syncWidgets();
+    if (!_hydrating) _scheduleSave();
+  }
+
+  void _scheduleSave() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 180), persist);
+  }
+
+  Future<void> hydrate() async {
+    _hydrating = true;
+    try {
+      await LocalDisk.readPlan();
+      final json = await LocalDisk.readStore();
+      if (json != null) _readJson(json);
+    } catch (error) {
+      debugPrint('AppStore hydrate failed: $error');
+    } finally {
+      _hydrating = false;
+    }
+    super.notifyListeners();
+    syncWidgets();
+  }
+
+  Future<void> persist() async {
+    if (_hydrating) return;
+    try {
+      await LocalDisk.writeStore(toJson());
+      await LocalDisk.writePlan();
+    } catch (error) {
+      debugPrint('AppStore persist failed: $error');
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'checkIns': checkIns.map((item) => item.toJson()).toList(),
+      'episodes': episodes.map((item) => item.toJson()).toList(),
+      'completedLessons': completedLessons.toList(),
+      'lessonDates': {
+        for (final entry in lessonDates.entries)
+          '${entry.key}': entry.value.millisecondsSinceEpoch,
+      },
+      'handledMoments': handledMoments,
+      'groundingCount': groundingCount,
+      'toolUses': toolUses,
+      'breathingFirst': breathingFirst,
+      'silentMode': silentMode,
+      'bondlyNotes': bondlyNotes,
+      'futureNote': futureNote,
+      'safePerson': safePerson,
+      'helpsMe': helpsMe,
+      'thanksNotes': thanksNotes.map((item) => item.toJson()).toList(),
+      'journeyScare': journeyScare,
+      'journeyLifeId': journeyLifeId,
+      'journeyAskAnswer': journeyAskAnswer,
+      'journeyClaims': journeyClaims.toList(),
+      'journeyLessons': journeyLessons.toList(),
+      'journeyFearOn': journeyFearOn,
+      'widgetLook': widgetLook,
+      'widgetPose': widgetPose,
+      'widgetVoice': widgetVoice,
+      'widgetShowHearts': widgetShowHearts,
+      'widgetShowStreak': widgetShowStreak,
+      'widgetCustomLine': widgetCustomLine,
+      'widgetSosStyle': widgetSosStyle,
+    };
+  }
+
+  void _readJson(Map<String, dynamic> json) {
+    checkIns
+      ..clear()
+      ..addAll(_maps(json['checkIns']).map(DailyCheckIn.fromJson));
+    episodes
+      ..clear()
+      ..addAll(_maps(json['episodes']).map(PanicEpisode.fromJson));
+    completedLessons
+      ..clear()
+      ..addAll((json['completedLessons'] as List?)?.whereType<int>() ?? const []);
+    lessonDates
+      ..clear()
+      ..addAll(_intDates(json['lessonDates']));
+    handledMoments = json['handledMoments'] as int? ?? handledMoments;
+    groundingCount = json['groundingCount'] as int? ?? groundingCount;
+    toolUses = json['toolUses'] as int? ?? toolUses;
+    breathingFirst = json['breathingFirst'] as bool? ?? breathingFirst;
+    silentMode = json['silentMode'] as bool? ?? silentMode;
+    bondlyNotes
+      ..clear()
+      ..addAll((json['bondlyNotes'] as List?)?.whereType<String>() ?? const []);
+    futureNote = json['futureNote'] as String? ?? futureNote;
+    safePerson = json['safePerson'] as String? ?? safePerson;
+    helpsMe = json['helpsMe'] as String? ?? helpsMe;
+    thanksNotes
+      ..clear()
+      ..addAll(_maps(json['thanksNotes']).map(ThanksNote.fromJson));
+    journeyScare = json['journeyScare'] as String? ?? journeyScare;
+    journeyLifeId = json['journeyLifeId'] as String? ?? journeyLifeId;
+    journeyAskAnswer = json['journeyAskAnswer'] as String? ?? journeyAskAnswer;
+    journeyClaims
+      ..clear()
+      ..addAll((json['journeyClaims'] as List?)?.whereType<String>() ?? const []);
+    journeyLessons
+      ..clear()
+      ..addAll((json['journeyLessons'] as List?)?.whereType<String>() ?? const []);
+    journeyFearOn
+      ..clear()
+      ..addAll(_intMap(json['journeyFearOn']));
+    widgetLook = json['widgetLook'] as String? ?? widgetLook;
+    widgetPose = json['widgetPose'] as String? ?? widgetPose;
+    widgetVoice = json['widgetVoice'] as String? ?? widgetVoice;
+    widgetShowHearts = json['widgetShowHearts'] as bool? ?? widgetShowHearts;
+    widgetShowStreak = json['widgetShowStreak'] as bool? ?? widgetShowStreak;
+    widgetCustomLine = json['widgetCustomLine'] as String? ?? widgetCustomLine;
+    widgetSosStyle = json['widgetSosStyle'] as String? ?? widgetSosStyle;
+  }
+
+  static List<Map<String, dynamic>> _maps(Object? value) {
+    if (value is! List) return const [];
+    return [
+      for (final item in value)
+        if (item is Map) Map<String, dynamic>.from(item),
+    ];
+  }
+
+  static Map<int, DateTime> _intDates(Object? value) {
+    if (value is! Map) return {};
+    final out = <int, DateTime>{};
+    for (final entry in value.entries) {
+      final key = int.tryParse('${entry.key}');
+      final ms = entry.value;
+      if (key == null || ms is! int) continue;
+      out[key] = DateTime.fromMillisecondsSinceEpoch(ms);
+    }
+    return out;
+  }
+
+  static Map<String, int> _intMap(Object? value) {
+    if (value is! Map) return {};
+    final out = <String, int>{};
+    for (final entry in value.entries) {
+      final n = entry.value;
+      if (n is int) out['${entry.key}'] = n;
+    }
+    return out;
   }
 
   final checkIns = <DailyCheckIn>[];
@@ -96,6 +305,13 @@ class AppStore extends ChangeNotifier {
   var toolUses = 0;
   var breathingFirst = true;
   var silentMode = false;
+  var widgetLook = 'cream';
+  var widgetPose = 'sitting';
+  var widgetVoice = 'bondly';
+  var widgetShowHearts = true;
+  var widgetShowStreak = true;
+  var widgetCustomLine = '';
+  var widgetSosStyle = 'sos';
   final bondlyNotes = <String>[];
   var futureNote = '';
   var safePerson = '';
@@ -481,6 +697,59 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
+
+  String get widgetDisplayLine {
+    switch (widgetVoice) {
+      case 'note':
+        final note = futureNote.trim();
+        return note.isEmpty ? bunlyLine : note;
+      case 'yours':
+        final custom = widgetCustomLine.trim();
+        return custom.isEmpty ? bunlyLine : custom;
+      case 'calm':
+        return widgetCalmLine;
+      default:
+        return bunlyLine;
+    }
+  }
+
+  static String get widgetCalmLine {
+    final hour = DateTime.now().hour;
+    if (hour < 6 || hour >= 22) return 'Quiet is allowed. I’m still here.';
+    if (hour < 12) return 'I’m here if a wave comes.';
+    if (hour >= 18) return 'We can take this slowly.';
+    return 'I’m here with you.';
+  }
+
+  String get widgetWeek {
+    final today = dateOnly(DateTime.now());
+    final monday = today.subtract(Duration(days: today.weekday - 1));
+    return List.generate(7, (i) {
+      final day = monday.add(Duration(days: i));
+      return hasCheckInOn(day) || practicedOn(day) ? '1' : '0';
+    }).join();
+  }
+
+  void syncWidgets() {
+    WidgetBridge.sync(
+      hearts: hearts,
+      streak: checkInStreak,
+      line: widgetDisplayLine,
+      practicedToday: practicedOn(dateOnly(DateTime.now())),
+      checkedInToday: checkedInToday,
+      look: widgetLook,
+      pose: widgetPose,
+      voice: widgetVoice,
+      showHearts: widgetShowHearts,
+      showStreak: widgetShowStreak,
+      customLine: widgetCustomLine,
+      futureNote: futureNote,
+      sosStyle: widgetSosStyle,
+      name: UserPlan.instance.firstName,
+      week: widgetWeek,
+    );
+  }
+
   void setBreathingFirst(bool value) {
     breathingFirst = value;
     notifyListeners();
@@ -490,6 +759,48 @@ class AppStore extends ChangeNotifier {
     silentMode = value;
     notifyListeners();
   }
+
+  void setWidgetLook(String value) {
+    if (widgetLook == value) return;
+    widgetLook = value;
+    notifyListeners();
+  }
+
+  void setWidgetPose(String value) {
+    if (widgetPose == value) return;
+    widgetPose = value;
+    notifyListeners();
+  }
+
+  void setWidgetVoice(String value) {
+    if (widgetVoice == value) return;
+    widgetVoice = value;
+    notifyListeners();
+  }
+
+  void setWidgetShowHearts(bool value) {
+    if (widgetShowHearts == value) return;
+    widgetShowHearts = value;
+    notifyListeners();
+  }
+
+  void setWidgetShowStreak(bool value) {
+    if (widgetShowStreak == value) return;
+    widgetShowStreak = value;
+    notifyListeners();
+  }
+
+  void setWidgetCustomLine(String value) {
+    widgetCustomLine = value;
+    notifyListeners();
+  }
+
+  void setWidgetSosStyle(String value) {
+    if (widgetSosStyle == value) return;
+    widgetSosStyle = value;
+    notifyListeners();
+  }
+
 
   void setFutureNote(String value) {
     futureNote = value.trim();

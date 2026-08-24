@@ -3,20 +3,21 @@ import WidgetKit
 
 struct SosProvider: TimelineProvider {
   func placeholder(in context: Context) -> SosEntry {
-    SosEntry(date: Date())
+    SosEntry(date: Date(), snapshot: .placeholder)
   }
 
   func getSnapshot(in context: Context, completion: @escaping (SosEntry) -> Void) {
-    completion(SosEntry(date: Date()))
+    completion(SosEntry(date: Date(), snapshot: WidgetSnapshot.current()))
   }
 
   func getTimeline(in context: Context, completion: @escaping (Timeline<SosEntry>) -> Void) {
-    completion(Timeline(entries: [SosEntry(date: Date())], policy: .never))
+    completion(Timeline(entries: [SosEntry(date: Date(), snapshot: WidgetSnapshot.current())], policy: .never))
   }
 }
 
 struct SosEntry: TimelineEntry {
   let date: Date
+  let snapshot: WidgetSnapshot
 }
 
 struct SosWidget: Widget {
@@ -25,7 +26,7 @@ struct SosWidget: Widget {
       SosView(entry: entry)
     }
     .configurationDisplayName("SOS")
-    .description("One tap into help if a wave is here.")
+    .description("One tap into help if a wave is here. Home Screen and Lock Screen.")
     .supportedFamilies([
       .systemSmall,
       .accessoryCircular,
@@ -39,15 +40,19 @@ struct SosView: View {
   @Environment(\.widgetFamily) private var family
   var entry: SosEntry
 
+  private var snap: WidgetSnapshot { entry.snapshot }
+  private var look: WidgetLook { .named(snap.look) }
+  private var soft: Bool { snap.isSoftSos }
+
   var body: some View {
     Group {
       switch family {
       case .accessoryCircular:
-        circular
+        lockCircular
       case .accessoryRectangular:
-        rectangular
+        lockRectangular
       case .accessoryInline:
-        Label("SOS · I’m here", systemImage: "heart.fill")
+        Label(soft ? "I'm here" : "SOS · I'm here", systemImage: "heart.fill")
       default:
         home
       }
@@ -60,55 +65,60 @@ struct SosView: View {
       Spacer(minLength: 0)
       ZStack {
         Circle()
-          .fill(BunlyColor.sosLip)
-          .frame(width: 72, height: 72)
-          .offset(y: 4)
+          .fill(soft ? BunlyColor.brand.opacity(0.18) : BunlyColor.sosDeep)
+          .frame(width: 76, height: 76)
+          .offset(y: soft ? 0 : 4)
         Circle()
-          .fill(BunlyColor.sos)
+          .fill(soft ? BunlyColor.brand : BunlyColor.sos)
           .frame(width: 72, height: 72)
-        Text("SOS")
-          .font(.system(size: 16, weight: .heavy, design: .rounded))
-          .foregroundStyle(.white)
+        VStack(spacing: 1) {
+          Image(systemName: "heart.fill")
+            .font(.system(size: 16, weight: .bold))
+            .foregroundStyle(.white)
+          Text(soft ? "Here" : "SOS")
+            .font(.system(size: 13, weight: .heavy, design: .rounded))
+            .foregroundStyle(.white)
+        }
       }
-      Text("A wave is here")
+      Text(soft ? "If a wave is here" : "A wave is here")
         .font(.system(size: 13, weight: .semibold, design: .rounded))
-        .foregroundStyle(BunlyColor.ink)
-      Text("Tap. I’m with you.")
+        .foregroundStyle(look.ink)
+      Text("Tap. I'm with you.")
         .font(.system(size: 11, weight: .medium, design: .rounded))
-        .foregroundStyle(BunlyColor.ink.opacity(0.55))
+        .foregroundStyle(look.muted)
       Spacer(minLength: 0)
     }
     .padding(14)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .modifier(HomeWidgetBackground())
-    .accessibilityLabel("SOS. Help with a panic attack.")
+    .modifier(HomeWidgetBackground(look: look))
+    .accessibilityLabel(soft ? "I'm here. Open Bunly help." : "SOS. Help with a panic attack.")
   }
 
-  private var circular: some View {
+  private var lockCircular: some View {
     ZStack {
       AccessoryWidgetBackground()
       VStack(spacing: 1) {
         Image(systemName: "heart.fill")
           .font(.system(size: 16, weight: .bold))
-        Text("SOS")
+        Text(soft ? "Here" : "SOS")
           .font(.system(size: 10, weight: .heavy, design: .rounded))
       }
     }
-    .accessibilityLabel("SOS. Open Bunly help.")
+    .accessibilityLabel(soft ? "I'm here. Open Bunly help." : "SOS. Open Bunly help.")
   }
 
-  private var rectangular: some View {
+  private var lockRectangular: some View {
     HStack(spacing: 10) {
       Image(systemName: "heart.fill")
       VStack(alignment: .leading, spacing: 1) {
-        Text("Bunly")
+        Text(soft ? "I'm here" : "Bunly SOS")
           .font(.headline)
-        Text("I’m here. Tap for SOS.")
+        Text("Tap if a wave is here.")
           .font(.subheadline)
           .foregroundStyle(.secondary)
       }
       Spacer(minLength: 0)
     }
-    .accessibilityLabel("Bunly SOS. I’m here. Tap for help.")
+    .accessibilityLabel("Bunly SOS. Tap for help.")
   }
 }

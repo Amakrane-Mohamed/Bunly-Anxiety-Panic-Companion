@@ -8,6 +8,7 @@ import '../../core/motion/app_motion.dart';
 import '../../core/platform/native_chrome.dart';
 import '../../core/store/app_store.dart';
 import '../../core/theme/app_colors.dart';
+import '../convert/paywall_screen.dart';
 import '../../core/theme/app_typography.dart';
 import 'journey_catalog.dart';
 import 'journey_look.dart';
@@ -37,6 +38,8 @@ class _JourneyBodyState extends State<JourneyBody> {
   }
 
   Future<void> _openSession(JourneySession session) async {
+    if (!await PaywallScreen.require(context)) return;
+    if (!mounted) return;
     final done = await NativeChrome.push<bool>(
       context,
       AppMotion.fadeTo(JourneySessionScreen(session: session)),
@@ -46,6 +49,8 @@ class _JourneyBodyState extends State<JourneyBody> {
   }
 
   Future<void> _openReminder(JourneyReminder reminder) async {
+    if (!await PaywallScreen.require(context)) return;
+    if (!mounted) return;
     final done = await NativeChrome.push<bool>(
       context,
       AppMotion.fadeTo(
@@ -63,6 +68,8 @@ class _JourneyBodyState extends State<JourneyBody> {
   }
 
   Future<void> _openLesson(JourneyLesson lesson) async {
+    if (!await PaywallScreen.require(context)) return;
+    if (!mounted) return;
     final wasDone = AppStore.instance.lessonDone(lesson.id);
     final done = await NativeChrome.push<bool>(
       context,

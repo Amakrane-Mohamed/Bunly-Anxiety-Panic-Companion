@@ -1,9 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import 'app.dart';
+import 'core/access/access.dart';
+import 'core/purchases/purchases_service.dart';
+import 'core/store/app_store.dart';
 import 'core/theme/app_colors.dart';
 
 Future<void> main() async {
@@ -12,6 +16,28 @@ Future<void> main() async {
   debugPaintBaselinesEnabled = false;
   debugPaintLayerBordersEnabled = false;
   await Firebase.initializeApp();
+  try {
+    await AppStore.instance.hydrate();
+  } catch (error) {
+    debugPrint('Launch hydrate failed: $error');
+  }
+  try {
+    await PurchasesService.instance.configure();
+  } catch (error) {
+    debugPrint('Launch purchases failed: $error');
+  }
+  try {
+    await Access.instance.hydrate();
+  } catch (error) {
+    debugPrint('Launch access failed: $error');
+  }
+  if (!Access.instance.onboarded) {
+    try {
+      await FirebaseAuth.instance.signOut();
+    } catch (error) {
+      debugPrint('Launch sign-out failed: $error');
+    }
+  }
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(

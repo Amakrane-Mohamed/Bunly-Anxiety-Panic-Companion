@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/access/access.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/platform/native_chrome.dart';
 import '../../core/platform/widget_bridge.dart';
 import '../../core/store/app_store.dart';
 import '../../core/theme/app_colors.dart';
+import '../checkin/checkin_screen.dart';
 import '../insights/insights_screen.dart';
 import '../journey/journey_screen.dart';
 import '../panic/panic_entry_sheet.dart';
@@ -25,6 +28,7 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
     NativeChrome.tabIndex.addListener(_onTab);
+    Access.instance.addListener(_onAccess);
     WidgetBridge.onOpened = _openFromWidget;
     WidgetsBinding.instance.addPostFrameCallback((_) => _attach());
   }
@@ -34,6 +38,7 @@ class _AppShellState extends State<AppShell> {
     if (WidgetBridge.onOpened == _openFromWidget) {
       WidgetBridge.onOpened = null;
     }
+    Access.instance.removeListener(_onAccess);
     NativeChrome.tabIndex.removeListener(_onTab);
     super.dispose();
   }
@@ -41,15 +46,10 @@ class _AppShellState extends State<AppShell> {
   Future<void> _attach() async {
     if (_attached) return;
     _attached = true;
-    await NativeChrome.hideTabs();
     await NativeChrome.attach();
+    await NativeChrome.reveal();
     final store = AppStore.instance;
-    await WidgetBridge.sync(
-      hearts: store.hearts,
-      streak: store.checkInStreak,
-      line: store.bunlyLine,
-      practicedToday: store.practicedOn(AppStore.dateOnly(DateTime.now())),
-    );
+    store.syncWidgets();
     final pending = WidgetBridge.pending;
     if (pending != null) {
       WidgetBridge.pending = null;
@@ -59,11 +59,24 @@ class _AppShellState extends State<AppShell> {
 
   void _openFromWidget(String host) {
     NativeChrome.setTab(0);
-    if (host != 'sos') return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      PanicEntrySheet.sos(context);
+      if (host == 'sos') {
+        PanicEntrySheet.sos(context);
+        return;
+      }
+      if (host == 'checkin') {
+        NativeChrome.push(
+          context,
+          AppMotion.fadeTo(const CheckInScreen()),
+          title: 'Check-in',
+        );
+      }
     });
+  }
+
+  void _onAccess() {
+    if (mounted) setState(() {});
   }
 
   void _onTab() {

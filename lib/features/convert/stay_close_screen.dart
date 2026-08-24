@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/profile/user_plan.dart';
+import '../../core/store/local_disk.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
@@ -27,6 +30,7 @@ class _StayCloseScreenState extends State<StayCloseScreen> {
     if (_busy) return;
     setState(() => _busy = true);
     UserPlan.instance.wantsCheckIns = true;
+    unawaited(LocalDisk.writePlan());
     try {
       await FirebaseMessaging.instance.requestPermission(
         alert: true,
@@ -42,6 +46,7 @@ class _StayCloseScreenState extends State<StayCloseScreen> {
 
   void _skip() {
     UserPlan.instance.wantsCheckIns = false;
+    unawaited(LocalDisk.writePlan());
     _openPaywall();
   }
 

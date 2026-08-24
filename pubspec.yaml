@@ -1,7 +1,7 @@
 name: bunly
 description: Anxiety & Panic Companion.
 publish_to: 'none'
-version: 1.0.0+4
+version: 1.0.0+5
 
 environment:
   sdk: ^3.12.2
@@ -19,6 +19,8 @@ dependencies:
   google_sign_in: ^7.2.0
   crypto: ^3.0.7
   audioplayers: ^6.5.1
+  shared_preferences: ^2.5.3
+  purchases_flutter: ^8.11.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -28,9 +30,9 @@ dev_dependencies:
 flutter_launcher_icons:
   ios: true
   android: false
-  image_path: assets/images/iconapp2.jpeg
+  image_path: assets/images/app_icon.png
   remove_alpha_ios: true
-  background_color_ios: "#6B4C9A"
+  background_color_ios: "#7634E0"
 
 flutter:
   uses-material-design: true

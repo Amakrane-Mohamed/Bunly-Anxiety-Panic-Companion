@@ -8,7 +8,7 @@ import '../../core/motion/app_motion.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/fade_up.dart';
-import '../home/home_screen.dart';
+import '../home/profile_setup.dart';
 import '../onboarding/widgets/onboarding_chrome.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -29,7 +29,7 @@ class _SignInScreenState extends State<SignInScreen> {
     HapticFeedback.lightImpact();
     AppAudio.answer();
     Navigator.of(context).pushAndRemoveUntil(
-      AppMotion.fadeTo(const HomeScreen()),
+      AppMotion.fadeTo(const ProfileSetupScreen()),
       (_) => false,
     );
   }

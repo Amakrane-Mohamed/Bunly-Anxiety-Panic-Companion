@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,12 +7,13 @@ import 'package:flutter/services.dart';
 import '../../core/audio/app_audio.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/profile/user_plan.dart';
+import '../../core/store/local_disk.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
 import '../../shared/widgets/fade_up.dart';
 import '../auth/sign_in_screen.dart';
-import '../home/home_screen.dart';
+import '../home/profile_setup.dart';
 import 'onboarding_content.dart';
 import 'widgets/bunly_moments.dart';
 import 'widgets/onboarding_chrome.dart';
@@ -95,6 +98,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     plan.win = picked(9);
     plan.heaviness = _sliders[3] ?? 0.5;
     plan.waiting = _sliders[5] ?? 0.5;
+    unawaited(LocalDisk.writePlan());
   }
 
   @override
@@ -136,7 +140,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   final signedIn = FirebaseAuth.instance.currentUser != null;
                   Navigator.of(context).pushAndRemoveUntil(
                     AppMotion.fadeTo(
-                      signedIn ? const HomeScreen() : const SignInScreen(),
+                      signedIn
+                          ? const ProfileSetupScreen()
+                          : const SignInScreen(),
                     ),
                     (_) => false,
                   );
