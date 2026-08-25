@@ -9,6 +9,7 @@ import 'core/access/access.dart';
 import 'core/purchases/purchases_service.dart';
 import 'core/store/app_store.dart';
 import 'core/theme/app_colors.dart';
+import 'features/auth/auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,11 @@ Future<void> main() async {
   debugPaintBaselinesEnabled = false;
   debugPaintLayerBordersEnabled = false;
   await Firebase.initializeApp();
+  try {
+    await AuthService.initialize();
+  } catch (error) {
+    debugPrint('Launch auth failed: $error');
+  }
   try {
     await AppStore.instance.hydrate();
   } catch (error) {

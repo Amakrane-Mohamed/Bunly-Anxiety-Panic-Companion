@@ -1,7 +1,7 @@
 name: bunly
 description: Anxiety & Panic Companion.
 publish_to: 'none'
-version: 1.0.0+5
+version: 1.0.0+6
 
 environment:
   sdk: ^3.12.2
@@ -21,6 +21,7 @@ dependencies:
   audioplayers: ^6.5.1
   shared_preferences: ^2.5.3
   purchases_flutter: ^8.11.0
+  url_launcher: ^6.3.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

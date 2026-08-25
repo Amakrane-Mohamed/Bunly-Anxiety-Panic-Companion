@@ -66,4 +66,9 @@ abstract final class LocalDisk {
     if (prefs == null) return;
     await prefs.setString(_planKey, jsonEncode(UserPlan.instance.toJson()));
   }
+
+  static Future<void> eraseAll() async {
+    final prefs = await open();
+    await prefs?.clear();
+  }
 }

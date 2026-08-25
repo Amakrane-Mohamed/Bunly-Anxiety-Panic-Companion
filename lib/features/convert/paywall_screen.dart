@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../core/access/access.dart';
 import '../../core/audio/app_audio.dart';
@@ -15,6 +17,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/fade_up.dart';
 import '../home/home_screen.dart';
+import '../legal/legal_screen.dart';
 
 enum _PayPlan { yearly, monthly }
 
@@ -31,9 +34,10 @@ class PaywallScreen extends StatefulWidget {
       return;
     }
     try {
-      await Navigator.of(context, rootNavigator: true).push<void>(
-        AppMotion.fadeTo(const PaywallScreen(asGate: true)),
-      );
+      await Navigator.of(
+        context,
+        rootNavigator: true,
+      ).push<void>(AppMotion.fadeTo(const PaywallScreen(asGate: true)));
     } finally {
       await NativeChrome.showRoot();
     }
@@ -132,9 +136,9 @@ class _PaywallScreenState extends State<PaywallScreen>
   }
 
   void _toast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _buy() async {
@@ -274,7 +278,7 @@ class _PaywallScreenState extends State<PaywallScreen>
                           ),
                         ),
                         const Spacer(),
-                        _TestChip(onTap: _openTester),
+                        if (kDebugMode) _TestLabel(onTap: _openTester),
                       ],
                     ),
                   ),
@@ -319,44 +323,63 @@ class _PaywallScreenState extends State<PaywallScreen>
                       const SizedBox(height: 22),
                       FadeUp(
                         delay: const Duration(milliseconds: 140),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _PlanCard(
-                                title: 'Yearly',
-                                price: '\$39.99',
-                                detail: '\$3.33 / month',
-                                badge: 'Save 65%',
-                                selected: yearly,
-                                onTap: () =>
-                                    setState(() => _plan = _PayPlan.yearly),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _PlanCard(
-                                title: 'Monthly',
-                                price: '\$9.99',
-                                detail: 'billed monthly',
-                                selected: !yearly,
-                                onTap: () =>
-                                    setState(() => _plan = _PayPlan.monthly),
-                              ),
-                            ),
-                          ],
+                        child: ListenableBuilder(
+                          listenable: PurchasesService.instance,
+                          builder: (context, _) {
+                            final purchases = PurchasesService.instance;
+                            final annual = purchases.annualPackage;
+                            final monthly = purchases.monthlyPackage;
+                            final save = _savePercent(annual, monthly);
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: _PlanCard(
+                                    title: 'Yearly',
+                                    price:
+                                        annual?.storeProduct.priceString ?? '—',
+                                    detail: _yearlyDetail(annual),
+                                    badge: save == null ? null : 'Save $save%',
+                                    selected: yearly,
+                                    onTap: () =>
+                                        setState(() => _plan = _PayPlan.yearly),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _PlanCard(
+                                    title: 'Monthly',
+                                    price:
+                                        monthly?.storeProduct.priceString ??
+                                        '—',
+                                    detail: 'billed monthly',
+                                    selected: !yearly,
+                                    onTap: () => setState(
+                                      () => _plan = _PayPlan.monthly,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 16),
                       FadeUp(
                         delay: const Duration(milliseconds: 220),
-                        child: _SubscribeButton(
-                          label: _busy
-                              ? 'One moment…'
-                              : yearly
-                              ? 'Start 7 days free'
-                              : 'Continue',
-                          onPressed: _busy ? null : _buy,
+                        child: ListenableBuilder(
+                          listenable: PurchasesService.instance,
+                          builder: (context, _) {
+                            final package = yearly
+                                ? PurchasesService.instance.annualPackage
+                                : PurchasesService.instance.monthlyPackage;
+                            return _SubscribeButton(
+                              label: _busy
+                                  ? 'One moment…'
+                                  : _subscribeLabel(package, yearly),
+                              onPressed: _busy ? null : _buy,
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -377,6 +400,58 @@ class _PaywallScreenState extends State<PaywallScreen>
                               ),
                             ),
                           ),
+                        ),
+                      ),
+                      FadeUp(
+                        delay: const Duration(milliseconds: 300),
+                        child: ListenableBuilder(
+                          listenable: PurchasesService.instance,
+                          builder: (context, _) {
+                            final package = yearly
+                                ? PurchasesService.instance.annualPackage
+                                : PurchasesService.instance.monthlyPackage;
+                            return Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                              child: Text(
+                                _renewalCopy(package, yearly),
+                                textAlign: TextAlign.center,
+                                style: AppTypography.ui(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.35,
+                                  color: Colors.white.withValues(alpha: 0.62),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      FadeUp(
+                        delay: const Duration(milliseconds: 320),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _LegalLink(
+                              label: 'Privacy Policy',
+                              onTap: () => LegalScreen.openPrivacy(context),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              child: Text(
+                                '·',
+                                style: AppTypography.ui(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            ),
+                            _LegalLink(
+                              label: 'Terms of Use',
+                              onTap: () => LegalScreen.openTerms(context),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -535,18 +610,12 @@ class _SelectDot extends StatelessWidget {
         shape: BoxShape.circle,
         color: selected ? Colors.white : Colors.transparent,
         border: Border.all(
-          color: selected
-              ? Colors.white
-              : Colors.white.withValues(alpha: 0.45),
+          color: selected ? Colors.white : Colors.white.withValues(alpha: 0.45),
           width: 1.5,
         ),
       ),
       child: selected
-          ? const Icon(
-              Icons.check_rounded,
-              size: 13,
-              color: Color(0xFF5B38AC),
-            )
+          ? const Icon(Icons.check_rounded, size: 13, color: Color(0xFF5B38AC))
           : null,
     );
   }
@@ -644,18 +713,12 @@ class _GlassClose extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.16),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.34),
-                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
               ),
               child: const SizedBox(
                 width: 40,
                 height: 40,
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 18,
-                  color: Colors.white,
-                ),
+                child: Icon(Icons.close_rounded, size: 18, color: Colors.white),
               ),
             ),
           ),
@@ -665,8 +728,8 @@ class _GlassClose extends StatelessWidget {
   }
 }
 
-class _TestChip extends StatelessWidget {
-  const _TestChip({required this.onTap});
+class _TestLabel extends StatelessWidget {
+  const _TestLabel({required this.onTap});
 
   final VoidCallback onTap;
 
@@ -677,40 +740,15 @@ class _TestChip extends StatelessWidget {
       label: 'Test',
       child: GestureDetector(
         onTap: onTap,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.34),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.science_outlined,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Test',
-                      style: AppTypography.ui(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+          child: Text(
+            'Test',
+            style: AppTypography.ui(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.32),
             ),
           ),
         ),
@@ -854,4 +892,87 @@ class _TesterDialogState extends State<_TesterDialog> {
       ),
     );
   }
+}
+
+class _LegalLink extends StatelessWidget {
+  const _LegalLink({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Text(
+          label,
+          style: AppTypography.ui(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Colors.white.withValues(alpha: 0.78),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _yearlyDetail(Package? package) {
+  final product = package?.storeProduct;
+  if (product == null) return 'billed yearly';
+  final monthly = product.price / 12;
+  if (monthly <= 0) return 'billed yearly';
+  final symbol = _currencySymbol(product.priceString);
+  return '$symbol${monthly.toStringAsFixed(2)} / month';
+}
+
+int? _savePercent(Package? annual, Package? monthly) {
+  final year = annual?.storeProduct.price;
+  final month = monthly?.storeProduct.price;
+  if (year == null || month == null || month <= 0) return null;
+  final yearIfMonthly = month * 12;
+  if (year >= yearIfMonthly) return null;
+  return (((yearIfMonthly - year) / yearIfMonthly) * 100).round();
+}
+
+String _subscribeLabel(Package? package, bool yearly) {
+  final trial = _trialLabel(package);
+  if (yearly && trial != null) return 'Start $trial free';
+  return 'Continue';
+}
+
+String _renewalCopy(Package? package, bool yearly) {
+  final price = package?.storeProduct.priceString;
+  final period = yearly ? 'year' : 'month';
+  final trial = _trialLabel(package);
+  final billed = price == null
+      ? 'Auto-renews each $period'
+      : '$price per $period${trial == null ? '' : ' after $trial free'}. Auto-renews until you cancel';
+  return '$billed. Payment is charged to your Apple ID. Cancel anytime in iPhone Settings → Subscriptions.';
+}
+
+String? _trialLabel(Package? package) {
+  final intro = package?.storeProduct.introductoryPrice;
+  if (intro == null || intro.price > 0) return null;
+  final units = intro.periodNumberOfUnits * intro.cycles;
+  switch (intro.periodUnit) {
+    case PeriodUnit.day:
+      return units == 1 ? '1 day' : '$units days';
+    case PeriodUnit.week:
+      final days = units * 7;
+      return days == 1 ? '1 day' : '$days days';
+    case PeriodUnit.month:
+      return units == 1 ? '1 month' : '$units months';
+    case PeriodUnit.year:
+      return units == 1 ? '1 year' : '$units years';
+    case PeriodUnit.unknown:
+      return null;
+  }
+}
+
+String _currencySymbol(String priceString) {
+  final match = RegExp(r'^[^\d]+').firstMatch(priceString.trim());
+  return match?.group(0)?.trim() ?? '';
 }

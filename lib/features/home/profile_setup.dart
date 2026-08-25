@@ -20,28 +20,24 @@ class ProfileSetupScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark.copyWith(
+      value: SystemUiOverlayStyle.light.copyWith(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: AppColors.canvas,
+        systemNavigationBarColor: const Color(0xFFFFF7F0),
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: AppColors.canvas,
+        backgroundColor: const Color(0xFFC99B7A),
         resizeToAvoidBottomInset: false,
         body: Stack(
           fit: StackFit.expand,
           children: [
             const DecoratedBox(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.washTop,
-                    Color(0xFFF8F3FC),
-                    Color(0xFFFFFFFF),
-                  ],
-                  stops: [0, 0.38, 1],
+                image: DecorationImage(
+                  image: AssetImage(OnboardingArt.house),
+                  fit: BoxFit.cover,
+                  alignment: Alignment(0, -0.18),
+                  filterQuality: FilterQuality.high,
                 ),
               ),
             ),

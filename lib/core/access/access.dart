@@ -21,7 +21,11 @@ class Access extends ChangeNotifier {
   Future<void> hydrate() async {
     final prefs = await LocalDisk.open();
     onboarded = prefs?.getBool(_onboardedKey) ?? false;
-    tester = prefs?.getBool(_testerKey) ?? false;
+    final storedTester = prefs?.getBool(_testerKey) ?? false;
+    tester = storedTester && kDebugMode;
+    if (!kDebugMode && storedTester) {
+      await prefs?.remove(_testerKey);
+    }
     premium = PurchasesService.instance.isPro;
     notifyListeners();
   }
@@ -35,6 +39,7 @@ class Access extends ChangeNotifier {
   }
 
   Future<void> enableTester() async {
+    if (!kDebugMode) return;
     tester = true;
     final prefs = await LocalDisk.open();
     await prefs?.setBool(_testerKey, true);
@@ -44,6 +49,16 @@ class Access extends ChangeNotifier {
   void syncPremium(bool value) {
     if (premium == value) return;
     premium = value;
+    notifyListeners();
+  }
+
+  Future<void> reset() async {
+    onboarded = false;
+    tester = false;
+    premium = false;
+    final prefs = await LocalDisk.open();
+    await prefs?.remove(_onboardedKey);
+    await prefs?.remove(_testerKey);
     notifyListeners();
   }
 }

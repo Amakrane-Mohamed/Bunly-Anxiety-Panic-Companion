@@ -10,6 +10,7 @@ import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/fade_up.dart';
 import '../home/profile_setup.dart';
 import '../onboarding/widgets/onboarding_chrome.dart';
+import 'auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -19,19 +20,46 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  String? _busyWith;
+  String? _error;
+
   @override
   void initState() {
     super.initState();
     AppAudio.stopMusic();
+    AuthService.initialize();
   }
 
-  void _continue() {
+  bool get _busy => _busyWith != null;
+
+  Future<void> _signIn(String provider) async {
+    if (_busy) return;
+    setState(() {
+      _busyWith = provider;
+      _error = null;
+    });
     HapticFeedback.lightImpact();
-    AppAudio.answer();
-    Navigator.of(context).pushAndRemoveUntil(
-      AppMotion.fadeTo(const ProfileSetupScreen()),
-      (_) => false,
-    );
+
+    final outcome = provider == 'apple'
+        ? await AuthService.signInWithApple()
+        : await AuthService.signInWithGoogle();
+    if (!mounted) return;
+
+    setState(() => _busyWith = null);
+    switch (outcome) {
+      case AuthOutcome.success:
+        AppAudio.answer();
+        Navigator.of(context).pushAndRemoveUntil(
+          AppMotion.fadeTo(const ProfileSetupScreen()),
+          (_) => false,
+        );
+      case AuthOutcome.canceled:
+        return;
+      case AuthOutcome.failed:
+        setState(() {
+          _error = AuthService.lastMessage ?? 'Couldn’t sign in. Try again.';
+        });
+    }
   }
 
   @override
@@ -129,12 +157,12 @@ class _SignInScreenState extends State<SignInScreen> {
                         label: 'Continue with Apple',
                         background: AppColors.ink,
                         foreground: Colors.white,
-                        busy: false,
+                        busy: _busyWith == 'apple',
                         icon: CustomPaint(
                           size: const Size(18, 18),
                           painter: AppleLogoPainter(color: Colors.white),
                         ),
-                        onPressed: _continue,
+                        onPressed: _busy ? null : () => _signIn('apple'),
                       ),
                       const SizedBox(height: 12),
                       _AuthButton(
@@ -142,15 +170,28 @@ class _SignInScreenState extends State<SignInScreen> {
                         background: Colors.white,
                         foreground: AppColors.ink,
                         bordered: true,
-                        busy: false,
+                        busy: _busyWith == 'google',
                         icon: Image.asset(
                           AppAssets.googleG,
                           width: 20,
                           height: 20,
                           filterQuality: FilterQuality.high,
                         ),
-                        onPressed: _continue,
+                        onPressed: _busy ? null : () => _signIn('google'),
                       ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 14),
+                        Text(
+                          _error!,
+                          textAlign: TextAlign.center,
+                          style: AppTypography.ui(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            height: 1.35,
+                            color: AppColors.sos,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -208,7 +249,7 @@ class _AuthButtonState extends State<_AuthButton> {
         curve: Curves.easeOut,
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 140),
-          opacity: enabled ? 1 : 0.55,
+          opacity: enabled || widget.busy ? 1 : 0.55,
           child: Container(
             height: 62,
             decoration: BoxDecoration(
@@ -223,27 +264,30 @@ class _AuthButtonState extends State<_AuthButton> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (widget.busy)
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.2,
-                      color: widget.foreground,
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.2,
+                        color: widget.foreground,
+                      ),
                     ),
                   )
                 else ...[
                   widget.icon,
                   const SizedBox(width: 10),
-                  Text(
-                    widget.label,
-                    style: AppTypography.ui(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.2,
-                      color: widget.foreground,
-                    ),
-                  ),
                 ],
+                Text(
+                  widget.label,
+                  style: AppTypography.ui(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                    color: widget.foreground,
+                  ),
+                ),
               ],
             ),
           ),

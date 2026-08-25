@@ -9,7 +9,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../access/access.dart';
 import 'revenue_cat_config.dart';
 
-class PurchasesService {
+class PurchasesService extends ChangeNotifier {
   PurchasesService._();
   static final PurchasesService instance = PurchasesService._();
 
@@ -98,6 +98,7 @@ class PurchasesService {
       lastError = '$error';
       debugPrint('RevenueCat refresh failed: $error');
     }
+    notifyListeners();
   }
 
   void _apply(CustomerInfo info) {
@@ -105,6 +106,7 @@ class PurchasesService {
         info.entitlements.all[RevenueCatConfig.entitlementId]?.isActive ??
         false;
     Access.instance.syncPremium(isPro);
+    notifyListeners();
   }
 
   Future<bool> purchase(Package package) async {

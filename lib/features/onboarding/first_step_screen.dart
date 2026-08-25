@@ -147,6 +147,16 @@ class _FirstStepCopy extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        Text(
+          'This is a companion, not medical care, therapy, or emergency help.',
+          style: AppTypography.ui(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            height: 1.45,
+            color: AppColors.inkMuted,
+          ),
+        ),
       ],
     );
   }

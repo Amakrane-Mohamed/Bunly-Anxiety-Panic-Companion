@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/access/access.dart';
 import '../../core/audio/app_audio.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/motion/app_motion.dart';
@@ -10,6 +12,7 @@ import '../../core/theme/app_colors.dart';
 import '../convert/paywall_screen.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_card.dart';
+import 'account_screen.dart';
 import 'widget_studio_screen.dart';
 import 'you_look.dart';
 
@@ -152,6 +155,10 @@ class _YouBodyState extends State<YouBody> {
   Future<void> _openFace(YouFace face) async {
     HapticFeedback.selectionClick();
     AppAudio.tap();
+    if (!Access.instance.unlocked) {
+      await PaywallScreen.require(context);
+      return;
+    }
     final thanks = await showGeneralDialog<bool>(
       context: context,
       barrierDismissible: true,
@@ -263,9 +270,10 @@ class _YouBodyState extends State<YouBody> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: AppStore.instance,
+      listenable: Listenable.merge([AppStore.instance, Access.instance]),
       builder: (context, _) {
         final store = AppStore.instance;
+        final locked = !Access.instance.unlocked;
         final thanks = store.thanksNotes;
         final face = YouFace.all[_face];
         final reduceMotion = MediaQuery.of(context).disableAnimations;
@@ -277,10 +285,7 @@ class _YouBodyState extends State<YouBody> {
           children: [
             Text(
               'Your space',
-              style: AppTypography.display(
-                fontSize: 28,
-                color: AppColors.ink,
-              ),
+              style: AppTypography.display(fontSize: 28, color: AppColors.ink),
             ),
             const SizedBox(height: 4),
             Text(
@@ -317,7 +322,10 @@ class _YouBodyState extends State<YouBody> {
                       onTap: () => _openFace(YouFace.all[index]),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(6, 4, 6, 8),
-                        child: YouCardArt(face: YouFace.all[index]),
+                        child: YouCardArt(
+                          face: YouFace.all[index],
+                          locked: locked,
+                        ),
                       ),
                     ),
                   );
@@ -510,7 +518,8 @@ class _YouBodyState extends State<YouBody> {
             const SizedBox(height: 10),
             YouKitTile(
               title: 'Home & Lock Screen',
-              body: 'Put Bondly on your Home Screen. SOS on the Lock Screen, if a wave comes.',
+              body:
+                  'Put Bondly on your Home Screen. SOS on the Lock Screen, if a wave comes.',
               art: BunlyPoses.huggingStar,
               onOpen: () async {
                 if (!await PaywallScreen.require(context)) return;
@@ -528,6 +537,29 @@ class _YouBodyState extends State<YouBody> {
               onChanged: (value) {
                 store.setSilentMode(value);
                 AppAudio.syncSilent();
+              },
+            ),
+            const SizedBox(height: 22),
+            Text(
+              'Account',
+              style: AppTypography.ui(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppColors.inkMuted,
+              ),
+            ),
+            const SizedBox(height: 10),
+            YouKitTile(
+              title: 'Account & privacy',
+              body: 'Sign out, delete account, Privacy Policy, Terms.',
+              art: BunlyPoses.delighted,
+              trailing: CupertinoIcons.chevron_forward,
+              onOpen: () {
+                NativeChrome.push(
+                  context,
+                  AppMotion.fadeTo(const AccountScreen()),
+                  title: 'Account',
+                );
               },
             ),
           ],

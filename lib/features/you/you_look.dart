@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -107,14 +109,16 @@ class YouCardArt extends StatelessWidget {
     super.key,
     required this.face,
     this.height,
+    this.locked = false,
   });
 
   final YouFace face;
   final double? height;
+  final bool locked;
 
   @override
   Widget build(BuildContext context) {
-    final art = Image.asset(
+    Widget art = Image.asset(
       face.art,
       fit: BoxFit.contain,
       alignment: Alignment.center,
@@ -125,6 +129,44 @@ class YouCardArt extends StatelessWidget {
         return _DrawnCard(face: face, height: height ?? 300);
       },
     );
+    if (locked) {
+      art = ClipRect(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+              child: art,
+            ),
+            const IgnorePointer(
+              child: Center(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Color(0xCCFFFFFF),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x33000000),
+                        blurRadius: 16,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Icon(
+                      CupertinoIcons.lock_fill,
+                      size: 22,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     if (height == null) return art;
     return SizedBox(height: height, width: double.infinity, child: art);
   }
@@ -196,10 +238,7 @@ class _DrawnCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Text(
                   'BUNLY',
                   style: AppTypography.ui(
@@ -280,12 +319,14 @@ class YouKitTile extends StatelessWidget {
     required this.body,
     required this.art,
     required this.onOpen,
+    this.trailing = CupertinoIcons.pencil,
   });
 
   final String title;
   final String body;
   final String art;
   final VoidCallback onOpen;
+  final IconData trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -339,7 +380,7 @@ class YouKitTile extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  CupertinoIcons.pencil,
+                  trailing,
                   size: 16,
                   color: AppColors.brand.withValues(alpha: 0.72),
                 ),
@@ -353,11 +394,7 @@ class YouKitTile extends StatelessWidget {
 }
 
 class YouQuietBar extends StatelessWidget {
-  const YouQuietBar({
-    super.key,
-    required this.quiet,
-    required this.onChanged,
-  });
+  const YouQuietBar({super.key, required this.quiet, required this.onChanged});
 
   final bool quiet;
   final ValueChanged<bool> onChanged;
@@ -499,11 +536,7 @@ class _YouWriteSheetState extends State<YouWriteSheet> {
           children: [
             Row(
               children: [
-                Icon(
-                  CupertinoIcons.pencil,
-                  size: 20,
-                  color: AppColors.brand,
-                ),
+                Icon(CupertinoIcons.pencil, size: 20, color: AppColors.brand),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

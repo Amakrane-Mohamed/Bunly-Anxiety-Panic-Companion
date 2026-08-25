@@ -44,6 +44,19 @@ class UserPlan {
     wantsCheckIns = json['wantsCheckIns'] as bool? ?? wantsCheckIns;
   }
 
+  void reset() {
+    name = '';
+    pronoun = 'they';
+    birthday = null;
+    hardest = [];
+    feelsLike = [];
+    wish = [];
+    win = [];
+    heaviness = 0.5;
+    waiting = 0.5;
+    wantsCheckIns = false;
+  }
+
   static List<String> _strings(Object? value) {
     if (value is! List) return const [];
     return value.whereType<String>().toList();

@@ -60,22 +60,14 @@ class DailyCheckIn {
 }
 
 class ThanksNote {
-  ThanksNote({
-    required this.id,
-    required this.text,
-    required this.at,
-  });
+  ThanksNote({required this.id, required this.text, required this.at});
 
   final String id;
   final String text;
   final DateTime at;
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'text': text,
-      'at': at.millisecondsSinceEpoch,
-    };
+    return {'id': id, 'text': text, 'at': at.millisecondsSinceEpoch};
   }
 
   factory ThanksNote.fromJson(Map<String, dynamic> json) {
@@ -173,6 +165,43 @@ class AppStore extends ChangeNotifier {
     syncWidgets();
   }
 
+  Future<void> erase() async {
+    _hydrating = true;
+    _saveTimer?.cancel();
+    checkIns.clear();
+    episodes.clear();
+    completedLessons.clear();
+    lessonDates.clear();
+    handledMoments = 0;
+    groundingCount = 0;
+    toolUses = 0;
+    breathingFirst = true;
+    silentMode = false;
+    widgetLook = 'cream';
+    widgetPose = 'sitting';
+    widgetVoice = 'bondly';
+    widgetShowHearts = true;
+    widgetShowStreak = true;
+    widgetCustomLine = '';
+    widgetSosStyle = 'sos';
+    bondlyNotes.clear();
+    futureNote = '';
+    safePerson = '';
+    helpsMe = '';
+    thanksNotes.clear();
+    journeyScare = null;
+    journeyLifeId = null;
+    journeyAskAnswer = '';
+    journeyClaims.clear();
+    journeyLessons.clear();
+    journeyFearOn.clear();
+    UserPlan.instance.reset();
+    await LocalDisk.eraseAll();
+    _hydrating = false;
+    super.notifyListeners();
+    syncWidgets();
+  }
+
   Future<void> persist() async {
     if (_hydrating) return;
     try {
@@ -227,7 +256,9 @@ class AppStore extends ChangeNotifier {
       ..addAll(_maps(json['episodes']).map(PanicEpisode.fromJson));
     completedLessons
       ..clear()
-      ..addAll((json['completedLessons'] as List?)?.whereType<int>() ?? const []);
+      ..addAll(
+        (json['completedLessons'] as List?)?.whereType<int>() ?? const [],
+      );
     lessonDates
       ..clear()
       ..addAll(_intDates(json['lessonDates']));
@@ -250,10 +281,14 @@ class AppStore extends ChangeNotifier {
     journeyAskAnswer = json['journeyAskAnswer'] as String? ?? journeyAskAnswer;
     journeyClaims
       ..clear()
-      ..addAll((json['journeyClaims'] as List?)?.whereType<String>() ?? const []);
+      ..addAll(
+        (json['journeyClaims'] as List?)?.whereType<String>() ?? const [],
+      );
     journeyLessons
       ..clear()
-      ..addAll((json['journeyLessons'] as List?)?.whereType<String>() ?? const []);
+      ..addAll(
+        (json['journeyLessons'] as List?)?.whereType<String>() ?? const [],
+      );
     journeyFearOn
       ..clear()
       ..addAll(_intMap(json['journeyFearOn']));
@@ -463,8 +498,7 @@ class AppStore extends ChangeNotifier {
 
   int? fearOn(DateTime day) => journeyFearOn[_dayKey(day)];
 
-  int get claimsToday =>
-      journeyDailyIds.where((id) => claimedToday(id)).length;
+  int get claimsToday => journeyDailyIds.where((id) => claimedToday(id)).length;
 
   int get practicesThisWeek {
     return weekDays.where(practicedOn).length;
@@ -697,7 +731,6 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
-
   String get widgetDisplayLine {
     switch (widgetVoice) {
       case 'note':
@@ -800,7 +833,6 @@ class AppStore extends ChangeNotifier {
     widgetSosStyle = value;
     notifyListeners();
   }
-
 
   void setFutureNote(String value) {
     futureNote = value.trim();
