@@ -21,7 +21,8 @@ class AuthService {
   /// Google’s ID token audience matches what Firebase Auth expects.
   static const googleServerClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
-    defaultValue: '',
+    defaultValue:
+        '322608639935-f9og8vb549ue9oivs08ogaf9qejm26jm.apps.googleusercontent.com',
   );
 
   static var _googleReady = false;
@@ -247,7 +248,7 @@ class AuthService {
   }) {
     final text = '${error.code} ${error.message ?? ''}'.toLowerCase();
     if (text.contains('audience') || text.contains('bundle')) {
-      return 'Firebase still thinks this app is com.example.bunly. Add an iOS app with com.bunlyapp.bunly, then drop in the new GoogleService-Info.plist.';
+      return 'Couldn’t finish sign-in. Try Apple, or try again in a moment.';
     }
     return error.message ?? fallback;
   }

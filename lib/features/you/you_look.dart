@@ -16,60 +16,89 @@ const Color kYouGlow = Color(0xFFB9A4F0);
 
 class YouFace {
   const YouFace({
+    required this.id,
     required this.name,
     required this.art,
     required this.fallback,
     required this.line,
-    this.thanksHint = false,
+    this.widgetPose = 'sitting',
+    this.claimKind = YouClaimKind.keep,
   });
 
+  final String id;
   final String name;
   final String art;
   final String fallback;
   final String line;
-  final bool thanksHint;
+  final String widgetPose;
+  final YouClaimKind claimKind;
 
   static const all = [
     YouFace(
+      id: 'curiosity',
       name: 'Curiosity',
       art: BunlyCards.curiosity,
       fallback: BunlyActivities.thinking,
       line: 'Asking is allowed. Even the tiny questions.',
+      widgetPose: 'sitting',
     ),
     YouFace(
+      id: 'anxious',
       name: 'Anxious',
       art: BunlyCards.anxious,
       fallback: BunlyActivities.worried,
       line: 'Feeling a lot still counts as trying.',
+      widgetPose: 'calm',
+      claimKind: YouClaimKind.laterYou,
     ),
     YouFace(
+      id: 'problemSolver',
       name: 'Problem Solver',
       art: BunlyCards.problemSolver,
       fallback: BunlyActivities.working,
       line: 'We can think it through. Slowly is fine.',
+      widgetPose: 'proud',
+      claimKind: YouClaimKind.helps,
     ),
     YouFace(
+      id: 'investigator',
       name: 'Investigator',
       art: BunlyCards.investigator,
       fallback: BunlyActivities.detective,
       line: 'Little things are clues. Not proof you’re broken.',
+      widgetPose: 'sitting',
+      claimKind: YouClaimKind.person,
     ),
     YouFace(
+      id: 'nurturer',
       name: 'Nurturer',
       art: BunlyCards.nurturer,
       fallback: BunlyActivities.gardening,
       line: 'Little by little. Including you.',
-      thanksHint: true,
+      widgetPose: 'hug',
+      claimKind: YouClaimKind.thanks,
     ),
     YouFace(
+      id: 'kindHeart',
       name: 'Kind Heart',
       art: BunlyCards.kindHeart,
       fallback: BunlyActivities.gifting,
       line: 'Kindness can be tiny and still true.',
-      thanksHint: true,
+      widgetPose: 'hug',
+      claimKind: YouClaimKind.thanks,
     ),
   ];
+
+  static YouFace? byId(String? id) {
+    if (id == null) return null;
+    for (final face in all) {
+      if (face.id == id) return face;
+    }
+    return null;
+  }
 }
+
+enum YouClaimKind { keep, thanks, laterYou, helps, person }
 
 class YouGlow extends StatelessWidget {
   const YouGlow({super.key, required this.child, this.compact = false});
@@ -110,11 +139,13 @@ class YouCardArt extends StatelessWidget {
     required this.face,
     this.height,
     this.locked = false,
+    this.claimed = false,
   });
 
   final YouFace face;
   final double? height;
   final bool locked;
+  final bool claimed;
 
   @override
   Widget build(BuildContext context) {
@@ -144,13 +175,6 @@ class YouCardArt extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Color(0xCCFFFFFF),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0x33000000),
-                        blurRadius: 16,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
                   ),
                   child: Padding(
                     padding: EdgeInsets.all(12),
@@ -166,9 +190,48 @@ class YouCardArt extends StatelessWidget {
           ],
         ),
       );
+    } else if (claimed) {
+      art = Stack(
+        fit: StackFit.expand,
+        children: [
+          art,
+          const Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: EdgeInsets.all(10),
+              child: YouClaimStamp(),
+            ),
+          ),
+        ],
+      );
     }
     if (height == null) return art;
     return SizedBox(height: height, width: double.infinity, child: art);
+  }
+}
+
+class YouClaimStamp extends StatelessWidget {
+  const YouClaimStamp({super.key, this.size = 28});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: AppColors.brand,
+        shape: BoxShape.circle,
+      ),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Icon(
+          CupertinoIcons.checkmark_alt,
+          size: size * 0.58,
+          color: Colors.white,
+        ),
+      ),
+    );
   }
 }
 

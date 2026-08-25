@@ -52,9 +52,8 @@ class PurchasesService extends ChangeNotifier {
   Future<void> configure() async {
     if (!Platform.isIOS && !Platform.isMacOS) return;
     if (!RevenueCatConfig.hasApiKey) {
-      debugPrint(
-        'RevenueCat: paste your appl_ key in RevenueCatConfig.appleApiKey.',
-      );
+      lastError = 'Purchases are unavailable right now.';
+      debugPrint('RevenueCat: Apple API key is missing.');
       return;
     }
     try {

@@ -184,6 +184,11 @@ class AppStore extends ChangeNotifier {
     widgetShowStreak = true;
     widgetCustomLine = '';
     widgetSosStyle = 'sos';
+    claimedFaces.clear();
+    youFaceId = null;
+    youFaceDay = null;
+    youFaceArt = null;
+    youFaceLine = null;
     bondlyNotes.clear();
     futureNote = '';
     safePerson = '';
@@ -244,6 +249,11 @@ class AppStore extends ChangeNotifier {
       'widgetShowStreak': widgetShowStreak,
       'widgetCustomLine': widgetCustomLine,
       'widgetSosStyle': widgetSosStyle,
+      'claimedFaces': claimedFaces.toList(),
+      'youFaceId': youFaceId,
+      'youFaceDay': youFaceDay,
+      'youFaceArt': youFaceArt,
+      'youFaceLine': youFaceLine,
     };
   }
 
@@ -299,6 +309,15 @@ class AppStore extends ChangeNotifier {
     widgetShowStreak = json['widgetShowStreak'] as bool? ?? widgetShowStreak;
     widgetCustomLine = json['widgetCustomLine'] as String? ?? widgetCustomLine;
     widgetSosStyle = json['widgetSosStyle'] as String? ?? widgetSosStyle;
+    claimedFaces
+      ..clear()
+      ..addAll(
+        (json['claimedFaces'] as List?)?.whereType<String>() ?? const [],
+      );
+    youFaceId = json['youFaceId'] as String? ?? youFaceId;
+    youFaceDay = json['youFaceDay'] as String? ?? youFaceDay;
+    youFaceArt = json['youFaceArt'] as String? ?? youFaceArt;
+    youFaceLine = json['youFaceLine'] as String? ?? youFaceLine;
   }
 
   static List<Map<String, dynamic>> _maps(Object? value) {
@@ -347,6 +366,11 @@ class AppStore extends ChangeNotifier {
   var widgetShowStreak = true;
   var widgetCustomLine = '';
   var widgetSosStyle = 'sos';
+  final claimedFaces = <String>{};
+  String? youFaceId;
+  String? youFaceDay;
+  String? youFaceArt;
+  String? youFaceLine;
   final bondlyNotes = <String>[];
   var futureNote = '';
   var safePerson = '';
@@ -590,6 +614,10 @@ class AppStore extends ChangeNotifier {
 
   String get bunlyLine {
     if (needsSupport) return 'I’m here. We can take this slowly.';
+    if (claimedFaceToday) {
+      final line = youFaceLine?.trim();
+      if (line != null && line.isNotEmpty) return line;
+    }
     if (latestCheckInToday != null) return 'I’m here with you.';
     return 'I’m here if a wave comes.';
   }
@@ -608,6 +636,10 @@ class AppStore extends ChangeNotifier {
 
   String get bunlyArt {
     if (needsSupport) return BunlyActivities.worried;
+    if (claimedFaceToday) {
+      final art = youFaceArt;
+      if (art != null && art.isNotEmpty) return art;
+    }
     final last = latestCheckInToday;
     if (last == null) return BunlyPoses.sitting;
     if (last.mood <= 2 || last.stress >= 4) return BunlyActivities.worried;
@@ -790,6 +822,27 @@ class AppStore extends ChangeNotifier {
 
   void setSilentMode(bool value) {
     silentMode = value;
+    notifyListeners();
+  }
+
+  bool get claimedFaceToday {
+    return youFaceId != null && youFaceDay == _dayKey(DateTime.now());
+  }
+
+  bool hasClaimedFace(String id) => claimedFaces.contains(id);
+
+  void claimFace({
+    required String id,
+    required String pose,
+    required String art,
+    required String line,
+  }) {
+    claimedFaces.add(id);
+    youFaceId = id;
+    youFaceDay = _dayKey(DateTime.now());
+    youFaceArt = art;
+    youFaceLine = line;
+    widgetPose = pose;
     notifyListeners();
   }
 
