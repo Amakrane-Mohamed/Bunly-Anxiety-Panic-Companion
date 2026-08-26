@@ -23,10 +23,10 @@ class JourneyScreen extends StatelessWidget {
               const JourneyBackdrop(),
               Padding(
                 padding: EdgeInsets.fromLTRB(
-                  16,
-                  safe.top + 8,
-                  16,
-                  10 + safe.bottom,
+                  20,
+                  safe.top + 10,
+                  20,
+                  12 + safe.bottom,
                 ),
                 child: const JourneyBody(),
               ),

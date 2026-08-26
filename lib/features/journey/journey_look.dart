@@ -15,9 +15,7 @@ class JourneyBackdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Stack(
       fit: StackFit.expand,
-      children: [
-        ExcludeSemantics(child: _PathNight()),
-      ],
+      children: [ExcludeSemantics(child: _PathNight())],
     );
   }
 }
@@ -58,7 +56,11 @@ class _PathNight extends StatelessWidget {
 }
 
 class JourneyBrandCard extends StatelessWidget {
-  const JourneyBrandCard({super.key, required this.child, this.claimed = false});
+  const JourneyBrandCard({
+    super.key,
+    required this.child,
+    this.claimed = false,
+  });
 
   final Widget child;
   final bool claimed;
