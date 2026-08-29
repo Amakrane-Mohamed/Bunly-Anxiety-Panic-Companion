@@ -2,8 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/layout/app_layout.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
+import 'readable_width.dart';
 
 /// Full-screen page with a tappable back control below the island.
 class BunlyScaffold extends StatelessWidget {
@@ -54,11 +56,15 @@ class BunlyScaffold extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Expanded(child: body),
+          Expanded(child: ReadableWidth(child: body)),
           if (bottom != null)
-            Padding(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, 12 + safe.bottom),
-              child: bottom,
+            ReadableWidth(
+              alignment: Alignment.bottomCenter,
+              maxWidth: AppLayout.sheetMax,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 12 + safe.bottom),
+                child: bottom,
+              ),
             ),
         ],
       ),

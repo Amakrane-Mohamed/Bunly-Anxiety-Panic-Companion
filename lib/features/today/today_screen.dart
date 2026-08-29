@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/constants/app_assets.dart';
+import '../../core/layout/app_layout.dart';
 import '../../core/store/app_store.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/hud_chips.dart';
+import '../../shared/widgets/readable_width.dart';
 import '../../shared/widgets/scene_hero.dart';
 import '../../shared/widgets/sos_button.dart';
 import '../panic/panic_entry_sheet.dart';
@@ -23,24 +26,35 @@ class TodayScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: AppStore.instance,
       builder: (context, _) {
+        final size = MediaQuery.sizeOf(context);
+        final wide = AppLayout.isWide(context);
+        final heroWidth = math.min(size.width, AppLayout.contentMax);
+        final naturalHero = heroWidth / _roomAspect;
+        final heroHeight = wide
+            ? math.min(naturalHero, size.height * 0.42)
+            : naturalHero;
+
         return ColoredBox(
           color: AppColors.home,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AspectRatio(
-                aspectRatio: _roomAspect,
-                child: _HomeHero(),
+              SizedBox(
+                height: heroHeight,
+                width: double.infinity,
+                child: const ReadableWidth(child: _HomeHero()),
               ),
               Expanded(
-                child: ListView(
-                  padding: EdgeInsets.fromLTRB(
-                    20,
-                    4,
-                    20,
-                    16 + MediaQuery.paddingOf(context).bottom,
+                child: ReadableWidth(
+                  child: ListView(
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      4,
+                      20,
+                      16 + MediaQuery.paddingOf(context).bottom,
+                    ),
+                    children: const [TodayHomeBody()],
                   ),
-                  children: const [TodayHomeBody()],
                 ),
               ),
             ],
@@ -75,9 +89,7 @@ class _BedSos extends StatelessWidget {
   Widget build(BuildContext context) {
     return Align(
       alignment: const Alignment(-0.52, 0.72),
-      child: SosButton(
-        onPressed: () => PanicEntrySheet.sos(context),
-      ),
+      child: SosButton(onPressed: () => PanicEntrySheet.sos(context)),
     );
   }
 }
@@ -201,9 +213,7 @@ class _BondlyOnRugState extends State<_BondlyOnRug>
                   const SizedBox(height: 8),
                   Semantics(
                     button: true,
-                    label: sleeping
-                        ? 'Bunly is sleeping'
-                        : 'Bunly is with you',
+                    label: sleeping ? 'Bunly is sleeping' : 'Bunly is with you',
                     child: GestureDetector(
                       onTap: _onInteract,
                       child: AnimatedBuilder(
@@ -264,10 +274,7 @@ class _TodayHud extends StatelessWidget {
       left: 16,
       right: 16,
       child: IgnorePointer(
-        child: HudStatRow(
-          hearts: store.hearts,
-          streak: store.checkInStreak,
-        ),
+        child: HudStatRow(hearts: store.hearts, streak: store.checkInStreak),
       ),
     );
   }

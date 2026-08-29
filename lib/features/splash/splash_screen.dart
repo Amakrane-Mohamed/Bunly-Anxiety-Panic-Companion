@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ class _SplashScreenState extends State<SplashScreen>
   late final AnimationController _icon;
   late final AnimationController _fill;
   late final Animation<double> _fillValue;
+  Timer? _holdTimer;
   var _left = false;
 
   @override
@@ -58,15 +60,14 @@ class _SplashScreenState extends State<SplashScreen>
     await _icon.forward();
     if (!mounted) return;
 
-    await Future<void>.delayed(_iconHold);
-    if (!mounted) return;
-
-    _icon.duration = _iconOutDuration;
-    _icon.reverse();
-    await _fill.forward();
-    if (!mounted) return;
-
-    await _leave();
+    _holdTimer = Timer(_iconHold, () async {
+      if (!mounted) return;
+      _icon.duration = _iconOutDuration;
+      _icon.reverse();
+      await _fill.forward();
+      if (!mounted) return;
+      await _leave();
+    });
   }
 
   Future<void> _leave() async {
@@ -92,6 +93,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _holdTimer?.cancel();
     _icon.dispose();
     _fill.dispose();
     super.dispose();

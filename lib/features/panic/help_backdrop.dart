@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 
 import '../../core/audio/app_audio.dart';
 import '../../core/constants/app_assets.dart';
+import '../../core/layout/app_layout.dart';
 import '../../core/store/app_store.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/readable_width.dart';
 
 class HelpBackdrop extends StatelessWidget {
   const HelpBackdrop({super.key, required this.child});
@@ -37,20 +39,24 @@ class HelpSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF3D2B6B).withValues(alpha: 0.18),
-            blurRadius: 24,
-            offset: const Offset(0, -8),
-          ),
-          ...AppColors.lift,
-        ],
+    return ReadableWidth(
+      maxWidth: AppLayout.sheetMax,
+      alignment: Alignment.bottomCenter,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF3D2B6B).withValues(alpha: 0.18),
+              blurRadius: 24,
+              offset: const Offset(0, -8),
+            ),
+            ...AppColors.lift,
+          ],
+        ),
+        child: child,
       ),
-      child: child,
     );
   }
 }
@@ -100,11 +106,7 @@ class QuietToggle extends StatelessWidget {
 }
 
 class HelpProgress extends StatelessWidget {
-  const HelpProgress({
-    super.key,
-    required this.step,
-    required this.total,
-  });
+  const HelpProgress({super.key, required this.step, required this.total});
 
   final int step;
   final int total;
@@ -136,4 +138,3 @@ class HelpProgress extends StatelessWidget {
     );
   }
 }
-

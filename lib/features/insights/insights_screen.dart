@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/store/app_store.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/readable_width.dart';
 import 'insights_body.dart';
 
 class InsightsScreen extends StatelessWidget {
@@ -28,7 +29,7 @@ class InsightsScreen extends StatelessWidget {
                   16,
                   10 + safe.bottom,
                 ),
-                child: const InsightsBody(),
+                child: const ReadableWidth(child: InsightsBody()),
               ),
             ],
           ),

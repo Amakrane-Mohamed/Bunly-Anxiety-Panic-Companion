@@ -16,6 +16,7 @@ import '../../core/purchases/purchases_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/fade_up.dart';
+import '../../shared/widgets/readable_width.dart';
 import '../home/home_screen.dart';
 import '../legal/legal_screen.dart';
 
@@ -235,208 +236,214 @@ class _PaywallScreenState extends State<PaywallScreen>
                   ),
                 ),
               ),
-              Column(
-                children: [
-                  SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: 40,
-                                height: 40,
-                                child: _GlassClose(onTap: _dismiss),
-                              ),
-                              const Spacer(),
-                              if (kDebugMode) _TestLabel(onTap: _openTester),
-                            ],
-                          ),
-                          const SizedBox(height: 18),
-                          FadeUp(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              child: Text(
-                                promise,
-                                textAlign: TextAlign.center,
-                                style: AppTypography.display(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w800,
-                                  height: 1.12,
-                                  letterSpacing: -0.8,
-                                  color: Colors.white,
+              ReadableWidth(
+                child: Column(
+                  children: [
+                    SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: _GlassClose(onTap: _dismiss),
+                                ),
+                                const Spacer(),
+                                if (kDebugMode) _TestLabel(onTap: _openTester),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+                            FadeUp(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                child: Text(
+                                  promise,
+                                  textAlign: TextAlign.center,
+                                  style: AppTypography.display(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.12,
+                                    letterSpacing: -0.8,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
+                            ),
+                            const SizedBox(height: 10),
+                            FadeUp(
+                              delay: const Duration(milliseconds: 80),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  name == 'friend'
+                                      ? 'Bondly stays when a wave comes.'
+                                      : 'Bondly stays with you, $name.',
+                                  textAlign: TextAlign.center,
+                                  style: AppTypography.ui(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.35,
+                                    color: Colors.white.withValues(alpha: 0.82),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, 10 + bottomInset),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FadeUp(
+                            delay: const Duration(milliseconds: 140),
+                            child: ListenableBuilder(
+                              listenable: PurchasesService.instance,
+                              builder: (context, _) {
+                                final purchases = PurchasesService.instance;
+                                final annual = purchases.annualPackage;
+                                final monthly = purchases.monthlyPackage;
+                                final save = _savePercent(annual, monthly);
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: _PlanCard(
+                                        title: 'Yearly',
+                                        price:
+                                            annual?.storeProduct.priceString ??
+                                            '—',
+                                        detail: _yearlyDetail(annual),
+                                        badge: save == null
+                                            ? null
+                                            : 'Save $save%',
+                                        selected: yearly,
+                                        onTap: () => setState(
+                                          () => _plan = _PayPlan.yearly,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: _PlanCard(
+                                        title: 'Monthly',
+                                        price:
+                                            monthly?.storeProduct.priceString ??
+                                            '—',
+                                        detail: 'billed monthly',
+                                        selected: !yearly,
+                                        onTap: () => setState(
+                                          () => _plan = _PayPlan.monthly,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          FadeUp(
+                            delay: const Duration(milliseconds: 220),
+                            child: ListenableBuilder(
+                              listenable: PurchasesService.instance,
+                              builder: (context, _) {
+                                final package = yearly
+                                    ? PurchasesService.instance.annualPackage
+                                    : PurchasesService.instance.monthlyPackage;
+                                return _SubscribeButton(
+                                  label: _busy
+                                      ? 'One moment…'
+                                      : _subscribeLabel(package, yearly),
+                                  onPressed: _busy ? null : _buy,
+                                );
+                              },
                             ),
                           ),
                           const SizedBox(height: 10),
                           FadeUp(
-                            delay: const Duration(milliseconds: 80),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
+                            delay: const Duration(milliseconds: 260),
+                            child: Text(
+                              yearly
+                                  ? 'Bunly Pro yearly. Auto-renews until you cancel in Settings → Subscriptions, at least 24 hours before the period ends. Charged to your Apple ID.'
+                                  : 'Bunly Pro monthly. Auto-renews until you cancel in Settings → Subscriptions, at least 24 hours before the period ends. Charged to your Apple ID.',
+                              textAlign: TextAlign.center,
+                              style: AppTypography.ui(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                height: 1.35,
+                                color: Colors.white.withValues(alpha: 0.58),
                               ),
-                              child: Text(
-                                name == 'friend'
-                                    ? 'Bondly stays when a wave comes.'
-                                    : 'Bondly stays with you, $name.',
-                                textAlign: TextAlign.center,
-                                style: AppTypography.ui(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.35,
-                                  color: Colors.white.withValues(alpha: 0.82),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          FadeUp(
+                            delay: const Duration(milliseconds: 280),
+                            child: GestureDetector(
+                              onTap: () {
+                                if (!_busy) _restore();
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                child: Text(
+                                  'Restore purchases',
+                                  style: AppTypography.ui(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white.withValues(alpha: 0.72),
+                                  ),
                                 ),
                               ),
+                            ),
+                          ),
+                          FadeUp(
+                            delay: const Duration(milliseconds: 320),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _LegalLink(
+                                  label: 'Privacy Policy',
+                                  onTap: () => LegalScreen.openPrivacy(context),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  child: Text(
+                                    '·',
+                                    style: AppTypography.ui(
+                                      fontSize: 12,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                _LegalLink(
+                                  label: 'Terms of Use',
+                                  onTap: () => LegalScreen.openTerms(context),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  const Spacer(),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(20, 0, 20, 10 + bottomInset),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FadeUp(
-                          delay: const Duration(milliseconds: 140),
-                          child: ListenableBuilder(
-                            listenable: PurchasesService.instance,
-                            builder: (context, _) {
-                              final purchases = PurchasesService.instance;
-                              final annual = purchases.annualPackage;
-                              final monthly = purchases.monthlyPackage;
-                              final save = _savePercent(annual, monthly);
-                              return Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: _PlanCard(
-                                      title: 'Yearly',
-                                      price:
-                                          annual?.storeProduct.priceString ??
-                                          '—',
-                                      detail: _yearlyDetail(annual),
-                                      badge: save == null
-                                          ? null
-                                          : 'Save $save%',
-                                      selected: yearly,
-                                      onTap: () => setState(
-                                        () => _plan = _PayPlan.yearly,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: _PlanCard(
-                                      title: 'Monthly',
-                                      price:
-                                          monthly?.storeProduct.priceString ??
-                                          '—',
-                                      detail: 'billed monthly',
-                                      selected: !yearly,
-                                      onTap: () => setState(
-                                        () => _plan = _PayPlan.monthly,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        FadeUp(
-                          delay: const Duration(milliseconds: 220),
-                          child: ListenableBuilder(
-                            listenable: PurchasesService.instance,
-                            builder: (context, _) {
-                              final package = yearly
-                                  ? PurchasesService.instance.annualPackage
-                                  : PurchasesService.instance.monthlyPackage;
-                              return _SubscribeButton(
-                                label: _busy
-                                    ? 'One moment…'
-                                    : _subscribeLabel(package, yearly),
-                                onPressed: _busy ? null : _buy,
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        FadeUp(
-                          delay: const Duration(milliseconds: 260),
-                          child: Text(
-                            yearly
-                                ? 'Bunly Pro yearly. Auto-renews until you cancel in iPhone Settings → Subscriptions, at least 24 hours before the period ends. Charged to your Apple ID.'
-                                : 'Bunly Pro monthly. Auto-renews until you cancel in iPhone Settings → Subscriptions, at least 24 hours before the period ends. Charged to your Apple ID.',
-                            textAlign: TextAlign.center,
-                            style: AppTypography.ui(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              height: 1.35,
-                              color: Colors.white.withValues(alpha: 0.58),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        FadeUp(
-                          delay: const Duration(milliseconds: 280),
-                          child: GestureDetector(
-                            onTap: () {
-                              if (!_busy) _restore();
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              child: Text(
-                                'Restore purchases',
-                                style: AppTypography.ui(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white.withValues(alpha: 0.72),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        FadeUp(
-                          delay: const Duration(milliseconds: 320),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _LegalLink(
-                                label: 'Privacy Policy',
-                                onTap: () => LegalScreen.openPrivacy(context),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                ),
-                                child: Text(
-                                  '·',
-                                  style: AppTypography.ui(
-                                    fontSize: 12,
-                                    color: Colors.white.withValues(alpha: 0.5),
-                                  ),
-                                ),
-                              ),
-                              _LegalLink(
-                                label: 'Terms of Use',
-                                onTap: () => LegalScreen.openTerms(context),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),

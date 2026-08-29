@@ -11,11 +11,6 @@ class SceneDelegate: FlutterSceneDelegate {
     expandIPadWindow(scene)
   }
 
-  override func sceneDidBecomeActive(_ scene: UIScene) {
-    super.sceneDidBecomeActive(scene)
-    expandIPadWindow(scene)
-  }
-
   override func scene(
     _ scene: UIScene,
     openURLContexts URLContexts: Set<UIOpenURLContext>
@@ -38,16 +33,13 @@ class SceneDelegate: FlutterSceneDelegate {
 
     let screen = windowScene.screen.bounds.size
     let restrictions = windowScene.sizeRestrictions
-    restrictions?.minimumSize = CGSize(width: 768, height: 1024)
+    restrictions?.minimumSize = CGSize(width: 320, height: 480)
     restrictions?.maximumSize = CGSize(
       width: max(screen.width, 2000),
-      height: max(screen.height, 2000),
+      height: max(screen.height, 2000)
     )
     if #available(iOS 16.0, *) {
       restrictions?.allowsFullScreen = true
-      windowScene.requestGeometryUpdate(
-        .iOS(systemFrame: windowScene.screen.bounds),
-      )
     }
   }
 

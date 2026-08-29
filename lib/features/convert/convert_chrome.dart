@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
+import '../../shared/widgets/readable_width.dart';
 
 class ConvertWash extends StatelessWidget {
   const ConvertWash({super.key, this.child});
@@ -36,7 +37,7 @@ class ConvertWash extends StatelessWidget {
                 ),
               ),
             ),
-            ?child,
+            if (child != null) ReadableWidth(child: child!),
           ],
         ),
       ),

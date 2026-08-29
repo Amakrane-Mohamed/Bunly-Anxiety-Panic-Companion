@@ -50,7 +50,7 @@ class _WidgetStudioScreenState extends State<WidgetStudioScreen> {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
             children: [
               Text(
-                'Bondly, on your iPhone',
+                'Bondly, on your Home Screen',
                 style: AppTypography.display(fontSize: 26, color: AppColors.ink),
               ),
               const SizedBox(height: 6),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/audio/app_audio.dart';
-import '../../core/theme/app_typography.dart';
 
 /// Round Duolingo-style SOS: a hard 3D lip that sinks on press.
 class SosButton extends StatefulWidget {

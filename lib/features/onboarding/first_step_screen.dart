@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
 import '../../shared/widgets/fade_up.dart';
+import '../../shared/widgets/readable_width.dart';
 import 'onboarding_flow.dart';
 
 class FirstStepScreen extends StatelessWidget {
@@ -46,39 +47,41 @@ class FirstStepScreen extends StatelessWidget {
                 ),
               ),
             ),
-            Column(
-              children: [
-                Expanded(
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Center(
-                        child: FadeUp(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: AppColors.card,
-                              borderRadius: BorderRadius.circular(36),
-                              boxShadow: AppColors.lift,
-                            ),
-                            child: const Padding(
-                              padding: EdgeInsets.fromLTRB(26, 26, 26, 30),
-                              child: _FirstStepCopy(),
+            ReadableWidth(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Center(
+                          child: FadeUp(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: AppColors.card,
+                                borderRadius: BorderRadius.circular(36),
+                                boxShadow: AppColors.lift,
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.fromLTRB(26, 26, 26, 30),
+                                child: _FirstStepCopy(),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(24, 12, 24, 18 + bottomInset),
-                  child: BunlyPrimaryButton(
-                    label: "Let's go!",
-                    onPressed: () => _openOnboarding(context),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(24, 12, 24, 18 + bottomInset),
+                    child: BunlyPrimaryButton(
+                      label: "Let's go!",
+                      onPressed: () => _openOnboarding(context),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

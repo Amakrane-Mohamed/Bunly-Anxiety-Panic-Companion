@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/audio/app_audio.dart';
@@ -30,10 +29,7 @@ class _InsightsBodyState extends State<InsightsBody> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        HudStatRow(
-          hearts: store.hearts,
-          streak: store.checkInStreak,
-        ),
+        HudStatRow(hearts: store.hearts, streak: store.checkInStreak),
         const SizedBox(height: 12),
         _StatRow(
           waves: store.panicThisMonth,
@@ -311,7 +307,9 @@ class _ChartBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final empty = mood == null || future;
-    final target = empty ? 0.08 : (0.18 + ((mood ?? 0) / 5).clamp(0.0, 1.0) * 0.72);
+    final target = empty
+        ? 0.08
+        : (0.18 + ((mood ?? 0) / 5).clamp(0.0, 1.0) * 0.72);
     final reduce = MediaQuery.disableAnimationsOf(context);
 
     return Semantics(
@@ -428,11 +426,7 @@ class _HabitCard extends StatelessWidget {
 }
 
 class _DayMark extends StatelessWidget {
-  const _DayMark({
-    required this.day,
-    required this.today,
-    required this.done,
-  });
+  const _DayMark({required this.day, required this.today, required this.done});
 
   final DateTime day;
   final DateTime today;
@@ -455,7 +449,9 @@ class _DayMark extends StatelessWidget {
               ? const Color(0xFFF6F1EA)
               : const Color(0xFFEFE6DA),
           borderRadius: BorderRadius.circular(99),
-          border: isToday ? Border.all(color: AppColors.brand, width: 1.2) : null,
+          border: isToday
+              ? Border.all(color: AppColors.brand, width: 1.2)
+              : null,
         ),
       ),
     );

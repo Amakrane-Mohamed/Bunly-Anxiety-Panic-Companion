@@ -10,7 +10,9 @@ import '../../core/profile/user_plan.dart';
 import '../../core/store/local_disk.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/layout/app_layout.dart';
 import '../../shared/widgets/bunly_button.dart';
+import '../../shared/widgets/readable_width.dart';
 import '../../shared/widgets/talk_bubble.dart';
 import 'doctor_checkin_screen.dart';
 
@@ -265,13 +267,15 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
           alignment: Alignment.topCenter,
           child: SafeArea(
             bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: TalkBubble(
-                key: ValueKey(step),
-                text: copy.title,
-                highlight: copy.highlight,
-                onComplete: () => _onMessageDone(step),
+            child: ReadableWidth(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: TalkBubble(
+                  key: ValueKey(step),
+                  text: copy.title,
+                  highlight: copy.highlight,
+                  onComplete: () => _onMessageDone(step),
+                ),
               ),
             ),
           ),
@@ -284,43 +288,48 @@ class _ProfileSetupOverlayState extends State<ProfileSetupOverlay>
               position: _slide,
               child: FadeTransition(
                 opacity: _fade,
-                child: Material(
-                  color: const Color(0xFFFFF7F0),
-                  elevation: 20,
-                  shadowColor: const Color(0x663C275C),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(36),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppLayout.sheetMax,
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  child: AnimatedSize(
-                    duration: AppMotion.page,
-                    curve: AppMotion.curve,
-                    alignment: Alignment.topCenter,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        24,
-                        26,
-                        24,
-                        18 + bottomInset,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 420),
-                            switchInCurve: AppMotion.curve,
-                            switchOutCurve: AppMotion.curve,
-                            child: KeyedSubtree(
-                              key: ValueKey(_step),
-                              child: _bodyForStep(),
+                  child: Material(
+                    color: const Color(0xFFFFF7F0),
+                    elevation: 20,
+                    shadowColor: const Color(0x663C275C),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(36),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: AnimatedSize(
+                      duration: AppMotion.page,
+                      curve: AppMotion.curve,
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          24,
+                          26,
+                          24,
+                          18 + bottomInset,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 420),
+                              switchInCurve: AppMotion.curve,
+                              switchOutCurve: AppMotion.curve,
+                              child: KeyedSubtree(
+                                key: ValueKey(_step),
+                                child: _bodyForStep(),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 22),
-                          BunlyPrimaryButton(
-                            label: 'Continue',
-                            onPressed: _canContinue ? _continue : null,
-                          ),
-                        ],
+                            const SizedBox(height: 22),
+                            BunlyPrimaryButton(
+                              label: 'Continue',
+                              onPressed: _canContinue ? _continue : null,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

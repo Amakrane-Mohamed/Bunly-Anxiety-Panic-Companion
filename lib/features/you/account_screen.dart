@@ -130,13 +130,13 @@ class _AccountScreenState extends State<AccountScreen> {
             const SizedBox(height: 10),
             _AccountRow(
               title: _busy ? 'One moment…' : 'Sign out',
-              body: 'Stay on this iPhone. Your notes stay here.',
+              body: 'Stay on this device. Your notes stay here.',
               onTap: _busy ? null : _signOut,
             ),
             const SizedBox(height: 8),
             _AccountRow(
               title: 'Delete account',
-              body: 'Removes your Bunly account and data on this iPhone.',
+              body: 'Removes your Bunly account and data on this device.',
               destructive: true,
               onTap: _busy ? null : _delete,
             ),
@@ -272,7 +272,7 @@ class _DeleteDialog extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'This removes your Bunly account and the companion data on this iPhone. It does not cancel a subscription. Manage that in iPhone Settings.',
+              'This removes your Bunly account and the companion data on this device. It does not cancel a subscription. Manage that in Settings.',
               style: AppTypography.ui(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/store/app_store.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/readable_width.dart';
 import 'journey_body.dart';
 import 'journey_look.dart';
 
@@ -28,7 +29,7 @@ class JourneyScreen extends StatelessWidget {
                   20,
                   12 + safe.bottom,
                 ),
-                child: const JourneyBody(),
+                child: const ReadableWidth(child: JourneyBody()),
               ),
             ],
           ),

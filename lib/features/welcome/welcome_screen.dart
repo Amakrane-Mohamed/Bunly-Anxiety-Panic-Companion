@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
 import '../../shared/widgets/fade_up.dart';
+import '../../shared/widgets/readable_width.dart';
 import '../onboarding/first_step_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -46,47 +47,49 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SafeArea(
-                  bottom: false,
-                  child: const Padding(
-                    padding: EdgeInsets.fromLTRB(28, 36, 28, 0),
-                    child: FadeUp(child: _WelcomeCopy()),
+            ReadableWidth(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SafeArea(
+                    bottom: false,
+                    child: const Padding(
+                      padding: EdgeInsets.fromLTRB(28, 36, 28, 0),
+                      child: FadeUp(child: _WelcomeCopy()),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: _WelcomeSheet(bottomInset: bottomInset),
-                      ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 72 + bottomInset,
-                        child: IgnorePointer(
-                          child: FadeUp(
-                            delay: const Duration(milliseconds: 80),
-                            offset: 18,
-                            child: Image.asset(
-                              BunlyPoses.winking,
-                              height: 248,
-                              filterQuality: FilterQuality.high,
-                              fit: BoxFit.contain,
+                  Expanded(
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: _WelcomeSheet(bottomInset: bottomInset),
+                        ),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 72 + bottomInset,
+                          child: IgnorePointer(
+                            child: FadeUp(
+                              delay: const Duration(milliseconds: 80),
+                              offset: 18,
+                              child: Image.asset(
+                                BunlyPoses.winking,
+                                height: 248,
+                                filterQuality: FilterQuality.high,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

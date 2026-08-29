@@ -12,6 +12,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
 import '../../shared/widgets/fade_up.dart';
+import '../../shared/widgets/readable_width.dart';
 import '../auth/sign_in_screen.dart';
 import '../home/profile_setup.dart';
 import 'onboarding_content.dart';
@@ -133,63 +134,70 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               ),
             ),
             if (generating)
-              _GeneratingStep(
-                pose: _step.pose,
-                onDone: () {
-                  _savePlan();
-                  final signedIn = FirebaseAuth.instance.currentUser != null;
-                  Navigator.of(context).pushAndRemoveUntil(
-                    AppMotion.fadeTo(
-                      signedIn
-                          ? const ProfileSetupScreen()
-                          : const SignInScreen(),
-                    ),
-                    (_) => false,
-                  );
-                },
+              ReadableWidth(
+                child: _GeneratingStep(
+                  pose: _step.pose,
+                  onDone: () {
+                    _savePlan();
+                    final signedIn = FirebaseAuth.instance.currentUser != null;
+                    Navigator.of(context).pushAndRemoveUntil(
+                      AppMotion.fadeTo(
+                        signedIn
+                            ? const ProfileSetupScreen()
+                            : const SignInScreen(),
+                      ),
+                      (_) => false,
+                    );
+                  },
+                ),
               )
             else
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 24, 0),
-                      child: OnboardingProgressBar(
-                        progress: progress,
-                        onBack: _back,
+              ReadableWidth(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 24, 0),
+                        child: OnboardingProgressBar(
+                          progress: progress,
+                          onBack: _back,
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: AppMotion.page,
-                      switchInCurve: AppMotion.curve,
-                      switchOutCurve: AppMotion.curve,
-                      layoutBuilder: (current, previous) {
-                        return Stack(
-                          alignment: Alignment.topCenter,
-                          children: [...previous, ?current],
-                        );
-                      },
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(opacity: animation, child: child);
-                      },
-                      child: KeyedSubtree(
-                        key: ValueKey(_index),
-                        child: _pageFor(_step),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: AppMotion.page,
+                        switchInCurve: AppMotion.curve,
+                        switchOutCurve: AppMotion.curve,
+                        layoutBuilder: (current, previous) {
+                          return Stack(
+                            alignment: Alignment.topCenter,
+                            children: [...previous, ?current],
+                          );
+                        },
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        child: KeyedSubtree(
+                          key: ValueKey(_index),
+                          child: _pageFor(_step),
+                        ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(24, 8, 24, 18 + bottomInset),
-                    child: BunlyPrimaryButton(
-                      label: _step.continueLabel,
-                      onPressed: _canContinue ? _next : null,
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(24, 8, 24, 18 + bottomInset),
+                      child: BunlyPrimaryButton(
+                        label: _step.continueLabel,
+                        onPressed: _canContinue ? _next : null,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
           ],
         ),

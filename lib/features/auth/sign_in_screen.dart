@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+import '../../core/access/access.dart';
 import '../../core/audio/app_audio.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/fade_up.dart';
+import '../../shared/widgets/readable_width.dart';
 import '../home/profile_setup.dart';
 import '../onboarding/widgets/onboarding_chrome.dart';
 import 'auth_service.dart';
@@ -22,12 +26,20 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   String? _busyWith;
   String? _error;
+  var _bunlyTaps = 0;
+  Timer? _tapReset;
 
   @override
   void initState() {
     super.initState();
     AppAudio.stopMusic();
     AuthService.initialize();
+  }
+
+  @override
+  void dispose() {
+    _tapReset?.cancel();
+    super.dispose();
   }
 
   bool get _busy => _busyWith != null;
@@ -62,6 +74,41 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
+  void _onBunlyTap() {
+    if (_busy) return;
+    _tapReset?.cancel();
+    _bunlyTaps += 1;
+    HapticFeedback.selectionClick();
+    if (_bunlyTaps >= 3) {
+      _bunlyTaps = 0;
+      unawaited(_openBypass());
+      return;
+    }
+    _tapReset = Timer(const Duration(milliseconds: 900), () {
+      _bunlyTaps = 0;
+    });
+  }
+
+  Future<void> _openBypass() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.46),
+      builder: (context) => const _BypassDialog(),
+    );
+    if (ok == true && mounted) _enterWithoutOAuth();
+  }
+
+  Future<void> _enterWithoutOAuth() async {
+    await Access.instance.enableTester();
+    if (!mounted) return;
+    AppAudio.answer();
+    HapticFeedback.mediumImpact();
+    Navigator.of(context).pushAndRemoveUntil(
+      AppMotion.fadeTo(const ProfileSetupScreen()),
+      (_) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
@@ -91,111 +138,116 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(28, 36, 28, 0),
+            ReadableWidth(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(28, 36, 28, 0),
+                      child: FadeUp(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'I’m still here with you.',
+                              style: AppTypography.ui(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                height: 1.3,
+                                color: AppColors.inkMuted,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            const WelcomeQuestion(
+                              text: 'Let’s save your plan so it stays yours.',
+                              highlight: 'stays yours',
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Sign in and I’ll keep it safe for the next time you need me.',
+                              style: AppTypography.ui(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w500,
+                                height: 1.4,
+                                color: AppColors.inkMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
                     child: FadeUp(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'I’m still here with you.',
-                            style: AppTypography.ui(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              height: 1.3,
-                              color: AppColors.inkMuted,
+                      delay: const Duration(milliseconds: 80),
+                      offset: 18,
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: GestureDetector(
+                            onTap: _onBunlyTap,
+                            child: Image.asset(
+                              BunlyPoses.huggingStar,
+                              height: 260,
+                              fit: BoxFit.contain,
+                              filterQuality: FilterQuality.high,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          const WelcomeQuestion(
-                            text: 'Let’s save your plan so it stays yours.',
-                            highlight: 'stays yours',
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(24, 8, 24, 18 + bottomInset),
+                    child: Column(
+                      children: [
+                        _AuthButton(
+                          label: 'Continue with Apple',
+                          background: AppColors.ink,
+                          foreground: Colors.white,
+                          busy: _busyWith == 'apple',
+                          icon: CustomPaint(
+                            size: const Size(18, 18),
+                            painter: AppleLogoPainter(color: Colors.white),
                           ),
-                          const SizedBox(height: 12),
+                          onPressed: _busy ? null : () => _signIn('apple'),
+                        ),
+                        const SizedBox(height: 12),
+                        _AuthButton(
+                          label: 'Continue with Google',
+                          background: Colors.white,
+                          foreground: AppColors.ink,
+                          bordered: true,
+                          busy: _busyWith == 'google',
+                          icon: Image.asset(
+                            AppAssets.googleG,
+                            width: 20,
+                            height: 20,
+                            filterQuality: FilterQuality.high,
+                          ),
+                          onPressed: _busy ? null : () => _signIn('google'),
+                        ),
+                        if (_error != null) ...[
+                          const SizedBox(height: 14),
                           Text(
-                            'Sign in and I’ll keep it safe for the next time you need me.',
+                            _error!,
+                            textAlign: TextAlign.center,
                             style: AppTypography.ui(
-                              fontSize: 17,
+                              fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              height: 1.4,
-                              color: AppColors.inkMuted,
+                              height: 1.35,
+                              color: AppColors.sos,
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: FadeUp(
-                    delay: const Duration(milliseconds: 80),
-                    offset: 18,
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Image.asset(
-                          BunlyPoses.huggingStar,
-                          height: 260,
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.high,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(24, 8, 24, 18 + bottomInset),
-                  child: Column(
-                    children: [
-                      _AuthButton(
-                        label: 'Continue with Apple',
-                        background: AppColors.ink,
-                        foreground: Colors.white,
-                        busy: _busyWith == 'apple',
-                        icon: CustomPaint(
-                          size: const Size(18, 18),
-                          painter: AppleLogoPainter(color: Colors.white),
-                        ),
-                        onPressed: _busy ? null : () => _signIn('apple'),
-                      ),
-                      const SizedBox(height: 12),
-                      _AuthButton(
-                        label: 'Continue with Google',
-                        background: Colors.white,
-                        foreground: AppColors.ink,
-                        bordered: true,
-                        busy: _busyWith == 'google',
-                        icon: Image.asset(
-                          AppAssets.googleG,
-                          width: 20,
-                          height: 20,
-                          filterQuality: FilterQuality.high,
-                        ),
-                        onPressed: _busy ? null : () => _signIn('google'),
-                      ),
-                      if (_error != null) ...[
-                        const SizedBox(height: 14),
-                        Text(
-                          _error!,
-                          textAlign: TextAlign.center,
-                          style: AppTypography.ui(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            height: 1.35,
-                            color: AppColors.sos,
-                          ),
-                        ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -291,6 +343,142 @@ class _AuthButtonState extends State<_AuthButton> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BypassDialog extends StatefulWidget {
+  const _BypassDialog();
+
+  @override
+  State<_BypassDialog> createState() => _BypassDialogState();
+}
+
+class _BypassDialogState extends State<_BypassDialog> {
+  late final TextEditingController _code;
+  var _wrong = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _code = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_code.text.trim() != Access.testerCode) {
+      HapticFeedback.heavyImpact();
+      setState(() => _wrong = true);
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    if (mounted) Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: const Color(0xFFFDF8F2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Tester access',
+              style: AppTypography.display(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: AppColors.ink,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Enter the code to skip sign-in.',
+              style: AppTypography.ui(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.inkMuted,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _code,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              obscureText: true,
+              maxLength: 4,
+              onChanged: (_) {
+                if (_wrong) setState(() => _wrong = false);
+              },
+              onSubmitted: (_) => _submit(),
+              style: AppTypography.ui(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 8,
+                color: AppColors.ink,
+              ),
+              decoration: InputDecoration(
+                counterText: '',
+                hintText: '••••',
+                filled: true,
+                fillColor: Colors.white,
+                errorText: _wrong ? 'That’s not the code.' : null,
+                contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            GestureDetector(
+              onTap: _submit,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.brand,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Text(
+                    'Skip sign-in',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.ui(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(false),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Text(
+                  'Cancel',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.ui(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.inkMuted,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

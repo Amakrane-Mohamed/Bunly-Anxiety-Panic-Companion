@@ -19,7 +19,7 @@ Profile you give us. First name, birthday, pronouns, and answers about panic, st
 Companion content. Check-ins, panic sessions, notes, thanks, widget lines, and similar writing you add in the app.
 Purchases. Subscription status and App Store transaction identifiers, processed by Apple and RevenueCat. We never see your full payment card number.
 Device and notifications. An Apple Push Notification token if you allow notifications, plus basic app diagnostics (for example that a sign-in failed).
-On-device storage. Most companion memory lives on your iPhone.
+On-device storage. Most companion memory lives on this device.
 
 3. How we use information
 To create and keep your account.
@@ -39,12 +39,12 @@ RevenueCat — subscription status so the app can unlock Bunly Pro.
 These providers process data to run their services. We do not share your notes or check-ins with advertisers.
 
 5. Retention
-We keep account data until you delete your account. Then we delete the Firebase profile we control. Some copies may remain briefly in backups. Apple keeps purchase records as required by Apple. Content stored only on your iPhone is removed when you delete your account in the app, or when you delete the app.
+We keep account data until you delete your account. Then we delete the Firebase profile we control. Some copies may remain briefly in backups. Apple keeps purchase records as required by Apple. Content stored only on this device is removed when you delete your account in the app, or when you delete the app.
 
 6. Your choices
 Sign out in You → Account.
-Delete your account in You → Account. That removes the account we control and the companion data on this iPhone. It does not cancel an App Store subscription. Cancel in iPhone Settings → your name → Subscriptions.
-Turn off notifications in iPhone Settings.
+Delete your account in You → Account. That removes the account we control and the companion data on this device. It does not cancel an App Store subscription. Cancel in Settings → your name → Subscriptions.
+Turn off notifications in Settings.
 Request a copy of the account data we hold by emailing $contactEmail.
 
 7. Health-related information
@@ -83,14 +83,14 @@ You are responsible for your own health decisions. Talk to a qualified professio
 You must be at least 13 years old. If you are 13–17, you may use Bunly only with a parent or guardian’s permission.
 
 3. Account
-You can create an account with Sign in with Apple or Google. You are responsible for that sign-in. You may sign out or delete your account in You → Account. Deleting your account removes the data we control and the companion data on this iPhone. It does not automatically cancel a paid subscription.
+You can create an account with Sign in with Apple or Google. You are responsible for that sign-in. You may sign out or delete your account in You → Account. Deleting your account removes the data we control and the companion data on this device. It does not automatically cancel a paid subscription.
 
 4. Subscriptions and payments
 Some features require Bunly Pro, sold as auto-renewing subscriptions through the App Store.
 
 Payment is charged to your Apple ID when you confirm. Subscriptions renew unless you cancel at least 24 hours before the end of the current period. Your account is charged for renewal within 24 hours before the period ends, at the then-current price shown in the App Store.
 
-You manage and cancel subscriptions in iPhone Settings → your name → Subscriptions. Deleting the app or your Bunly account does not cancel a subscription.
+You manage and cancel subscriptions in Settings → your name → Subscriptions. Deleting the app or your Bunly account does not cancel a subscription.
 
 If a free trial is offered, the length and price after the trial are shown on the paywall and in the App Store. Unused trial time is forfeited when you buy a subscription.
 

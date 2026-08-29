@@ -72,7 +72,7 @@ final class NativeChrome: NSObject, UITabBarDelegate {
     let appearance = UITabBarAppearance()
     appearance.configureWithDefaultBackground()
 
-    let tabBar = UITabBar()
+    let tabBar = LayoutTabBar()
     tabBar.delegate = self
     tabBar.tintColor = purple
     tabBar.unselectedItemTintColor = .secondaryLabel
@@ -88,6 +88,9 @@ final class NativeChrome: NSObject, UITabBarDelegate {
     tabBar.selectedItem = tabBar.items?.first
     tabBar.isHidden = true
     tabBar.translatesAutoresizingMaskIntoConstraints = false
+    tabBar.onLayout = { [weak self] in
+      self?.syncSafeArea()
+    }
     self.tabBar = tabBar
 
     window.addSubview(tabBar)
@@ -135,15 +138,17 @@ final class NativeChrome: NSObject, UITabBarDelegate {
 
   private func syncSafeArea() {
     guard let flutter else { return }
-    flutter.view.window?.layoutIfNeeded()
-    tabBar?.layoutIfNeeded()
 
     var bottom: CGFloat = 0
     let safe = flutter.view.window?.safeAreaInsets ?? flutter.view.safeAreaInsets
     if let tabBar, !tabBar.isHidden {
-      bottom = max(0, tabBar.frame.height - safe.bottom)
+      let height = tabBar.bounds.height > 0 ? tabBar.bounds.height : tabBar.frame.height
+      bottom = max(0, height - safe.bottom)
     }
-    flutter.additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: bottom, right: 0)
+    let insets = UIEdgeInsets(top: 0, left: 0, bottom: bottom, right: 0)
+    if flutter.additionalSafeAreaInsets != insets {
+      flutter.additionalSafeAreaInsets = insets
+    }
   }
 
   func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
@@ -209,5 +214,14 @@ final class NativeChrome: NSObject, UITabBarDelegate {
       }
     }
     return findFlutter(in: controller.presentedViewController)
+  }
+}
+
+private final class LayoutTabBar: UITabBar {
+  var onLayout: (() -> Void)?
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    onLayout?()
   }
 }

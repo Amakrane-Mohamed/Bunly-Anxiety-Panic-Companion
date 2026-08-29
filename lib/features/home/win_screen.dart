@@ -11,6 +11,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
 import '../../shared/widgets/fade_up.dart';
+import '../../shared/widgets/readable_width.dart';
 import '../convert/plan_reveal_screen.dart';
 
 class WinScreen extends StatefulWidget {
@@ -156,60 +157,67 @@ class _WinScreenState extends State<WinScreen> with TickerProviderStateMixin {
                   );
                 },
               ),
-              Column(
-                children: [
-                  const Spacer(flex: 2),
-                  ScaleTransition(
-                    scale: _scale,
-                    child: Image.asset(
-                      BunlyPoses.happyWin,
-                      height: 280,
-                      fit: BoxFit.contain,
-                      filterQuality: FilterQuality.high,
+              ReadableWidth(
+                child: Column(
+                  children: [
+                    const Spacer(flex: 2),
+                    ScaleTransition(
+                      scale: _scale,
+                      child: Image.asset(
+                        BunlyPoses.happyWin,
+                        height: 280,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                      ),
                     ),
-                  ),
-                  FadeUp(
-                    delay: const Duration(milliseconds: 360),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(32, 4, 32, 0),
-                      child: Text(
-                        'That’s brave. I hear you.',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.display(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          height: 1.16,
-                          letterSpacing: -0.8,
-                          color: AppColors.ink,
+                    FadeUp(
+                      delay: const Duration(milliseconds: 360),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(32, 4, 32, 0),
+                        child: Text(
+                          'That’s brave. I hear you.',
+                          textAlign: TextAlign.center,
+                          style: AppTypography.display(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            height: 1.16,
+                            letterSpacing: -0.8,
+                            color: AppColors.ink,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  FadeUp(
-                    delay: const Duration(milliseconds: 520),
-                    child: Text(
-                      'Thank you for telling me.',
-                      textAlign: TextAlign.center,
-                      style: AppTypography.ui(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.inkMuted,
+                    const SizedBox(height: 10),
+                    FadeUp(
+                      delay: const Duration(milliseconds: 520),
+                      child: Text(
+                        'Thank you for telling me.',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.ui(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.inkMuted,
+                        ),
                       ),
                     ),
-                  ),
-                  const Spacer(flex: 2),
-                  FadeUp(
-                    delay: const Duration(milliseconds: 780),
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(24, 0, 24, 18 + bottomInset),
-                      child: BunlyPrimaryButton(
-                        label: 'Continue',
-                        onPressed: _continue,
+                    const Spacer(flex: 2),
+                    FadeUp(
+                      delay: const Duration(milliseconds: 780),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          24,
+                          0,
+                          24,
+                          18 + bottomInset,
+                        ),
+                        child: BunlyPrimaryButton(
+                          label: 'Continue',
+                          onPressed: _continue,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),

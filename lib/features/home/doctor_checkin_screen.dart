@@ -7,6 +7,7 @@ import '../../core/motion/app_motion.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/fade_up.dart';
+import '../../shared/widgets/readable_width.dart';
 import '../../shared/widgets/talk_bubble.dart';
 import 'win_screen.dart';
 
@@ -20,7 +21,8 @@ class DoctorCheckInScreen extends StatefulWidget {
 class _DoctorCheckInScreenState extends State<DoctorCheckInScreen> {
   static const _beats = [
     (
-      text: 'I see you. You’re fighting panic attacks — and you’re not doing that alone.',
+      text:
+          'I see you. You’re fighting panic attacks — and you’re not doing that alone.',
       highlight: 'not doing that alone',
     ),
     (
@@ -54,9 +56,9 @@ class _DoctorCheckInScreenState extends State<DoctorCheckInScreen> {
   void _answer() {
     HapticFeedback.lightImpact();
     if (_index >= _beats.length - 1) {
-      Navigator.of(context).pushReplacement(
-        AppMotion.fadeTo(const WinScreen()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(AppMotion.fadeTo(const WinScreen()));
       return;
     }
     setState(() {
@@ -108,14 +110,16 @@ class _DoctorCheckInScreenState extends State<DoctorCheckInScreen> {
                 alignment: Alignment.topCenter,
                 child: SafeArea(
                   bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    child: TalkBubble(
-                      key: ValueKey(_index),
-                      text: beat.text,
-                      highlight: beat.highlight,
-                      face: BunlyEmotions.content,
-                      onComplete: _onTalkDone,
+                  child: ReadableWidth(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: TalkBubble(
+                        key: ValueKey(_index),
+                        text: beat.text,
+                        highlight: beat.highlight,
+                        face: BunlyEmotions.content,
+                        onComplete: _onTalkDone,
+                      ),
                     ),
                   ),
                 ),
@@ -123,28 +127,31 @@ class _DoctorCheckInScreenState extends State<DoctorCheckInScreen> {
               if (_showChoices)
                 Align(
                   alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(20, 0, 20, 22 + bottomInset),
-                    child: FadeUp(
-                      offset: 18,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _ChoiceButton(
-                              label: 'No',
-                              filled: false,
-                              onTap: _answer,
+                  child: ReadableWidth(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, 22 + bottomInset),
+                      child: FadeUp(
+                        offset: 18,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _ChoiceButton(
+                                label: 'No',
+                                filled: false,
+                                onTap: _answer,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: _ChoiceButton(
-                              label: 'Yes',
-                              filled: true,
-                              onTap: _answer,
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: _ChoiceButton(
+                                label: 'Yes',
+                                filled: true,
+                                onTap: _answer,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

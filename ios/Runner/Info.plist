@@ -72,6 +72,10 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Bunly uses your camera only if you choose to take a photo for your profile or journal.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Bunly uses your photo library only if you choose to add a photo to your profile or journal.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

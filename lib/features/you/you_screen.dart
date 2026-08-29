@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/store/app_store.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/readable_width.dart';
 import 'you_body.dart';
 
 class YouScreen extends StatelessWidget {
@@ -15,9 +16,16 @@ class YouScreen extends StatelessWidget {
       builder: (context, _) {
         return ColoredBox(
           color: AppColors.home,
-          child: ListView(
-            padding: EdgeInsets.fromLTRB(20, safe.top + 8, 20, 20 + safe.bottom),
-            children: const [YouBody()],
+          child: ReadableWidth(
+            child: ListView(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                safe.top + 8,
+                20,
+                20 + safe.bottom,
+              ),
+              children: const [YouBody()],
+            ),
           ),
         );
       },

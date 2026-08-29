@@ -455,7 +455,7 @@ class _YouBodyState extends State<YouBody> {
               ),
             const SizedBox(height: 22),
             Text(
-              'On your iPhone',
+              'On this device',
               style: AppTypography.ui(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
