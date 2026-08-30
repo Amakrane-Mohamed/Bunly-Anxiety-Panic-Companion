@@ -1,3 +1,6 @@
 {
-    "cursor.cmdk.useThemedDiffBackground2": false
+    "cursor.cmdk.useThemedDiffBackground2": false,
+    "workbench.colorTheme": "Monokai Dimmed",
+    "workbench.preferredDarkColorTheme": "Cursor Dark",
+    "workbench.preferredHighContrastColorTheme": "Tomorrow Night Blue"
 }

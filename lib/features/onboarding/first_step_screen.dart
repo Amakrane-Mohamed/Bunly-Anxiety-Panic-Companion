@@ -152,7 +152,7 @@ class _FirstStepCopy extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'This is a companion, not medical care, therapy, or emergency help.',
+          'This is a companion, not medical care or therapy.',
           style: AppTypography.ui(
             fontSize: 14,
             fontWeight: FontWeight.w500,

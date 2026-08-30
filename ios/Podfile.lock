@@ -1188,18 +1188,6 @@ PODS:
     - abseil/meta/type_traits
     - abseil/xcprivacy
   - abseil/xcprivacy (1.20240722.0)
-  - AppAuth (2.1.0):
-    - AppAuth/Core (= 2.1.0)
-    - AppAuth/ExternalUserAgent (= 2.1.0)
-  - AppAuth/Core (2.1.0)
-  - AppAuth/ExternalUserAgent (2.1.0):
-    - AppAuth/Core
-  - AppCheckCore (11.3.1):
-    - GoogleUtilities/Environment (~> 8.0)
-    - GoogleUtilities/UserDefaults (~> 8.0)
-    - PromisesObjC (~> 2.4)
-    - PromisesSwift (~> 2.4)
-    - RecaptchaInterop (~> 101.0)
   - audioplayers_darwin (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -1213,9 +1201,6 @@ PODS:
     - Firebase/Firestore (= 12.17.0)
     - firebase_core
     - Flutter
-  - Firebase/Auth (12.17.0):
-    - Firebase/CoreOnly
-    - FirebaseAuth (~> 12.17.0)
   - Firebase/CoreOnly (12.17.0):
     - FirebaseCore (~> 12.17.0)
   - Firebase/Firestore (12.17.0):
@@ -1227,10 +1212,6 @@ PODS:
   - Firebase/Storage (12.17.0):
     - Firebase/CoreOnly
     - FirebaseStorage (~> 12.17.0)
-  - firebase_auth (6.5.7):
-    - Firebase/Auth (= 12.17.0)
-    - firebase_core
-    - Flutter
   - firebase_core (4.13.0):
     - Firebase/CoreOnly (= 12.17.0)
     - Flutter
@@ -1243,15 +1224,6 @@ PODS:
     - firebase_core
     - Flutter
   - FirebaseAppCheckInterop (12.17.0)
-  - FirebaseAuth (12.17.0):
-    - FirebaseAppCheckInterop (~> 12.17.0)
-    - FirebaseAuthInterop (~> 12.17.0)
-    - FirebaseCore (~> 12.17.0)
-    - FirebaseCoreExtension (~> 12.17.0)
-    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
-    - GoogleUtilities/Environment (~> 8.1)
-    - GTMSessionFetcher/Core (< 6.0, >= 3.4)
-    - RecaptchaInterop (~> 101.0)
   - FirebaseAuthInterop (12.17.0)
   - FirebaseCore (12.17.0):
     - FirebaseCoreInternal (~> 12.17.0)
@@ -1304,19 +1276,9 @@ PODS:
     - GoogleUtilities/Environment (~> 8.1)
     - GTMSessionFetcher/Core (< 6.0, >= 3.4)
   - Flutter (1.0.0)
-  - google_sign_in_ios (0.0.1):
-    - Flutter
-    - FlutterMacOS
-    - GoogleSignIn (~> 9.0)
-    - GTMSessionFetcher (>= 3.4.0)
   - GoogleDataTransport (10.1.1):
     - nanopb (~> 3.30910.0)
     - PromisesObjC (~> 2.4)
-  - GoogleSignIn (9.2.0):
-    - AppAuth (~> 2.1)
-    - AppCheckCore (~> 11.0)
-    - GTMAppAuth (~> 5.0)
-    - GTMSessionFetcher/Core (~> 3.3)
   - GoogleUtilities/AppDelegateSwizzler (8.1.2):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
@@ -1433,14 +1395,7 @@ PODS:
     - gRPC-Core/Privacy (= 1.69.0)
   - gRPC-Core/Interface (1.69.0)
   - gRPC-Core/Privacy (1.69.0)
-  - GTMAppAuth (5.0.0):
-    - AppAuth/Core (~> 2.0)
-    - GTMSessionFetcher/Core (< 4.0, >= 3.3)
-  - GTMSessionFetcher (3.5.0):
-    - GTMSessionFetcher/Full (= 3.5.0)
-  - GTMSessionFetcher/Core (3.5.0)
-  - GTMSessionFetcher/Full (3.5.0):
-    - GTMSessionFetcher/Core
+  - GTMSessionFetcher/Core (5.3.1)
   - leveldb-library (1.22.6)
   - nanopb (3.30910.0):
     - nanopb/decode (= 3.30910.0)
@@ -1448,19 +1403,13 @@ PODS:
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
   - PromisesObjC (2.4.1)
-  - PromisesSwift (2.4.1):
-    - PromisesObjC (= 2.4.1)
   - purchases_flutter (8.11.0):
     - Flutter
     - PurchasesHybridCommon (= 14.3.0)
   - PurchasesHybridCommon (14.3.0):
     - RevenueCat (= 5.32.0)
-  - RecaptchaInterop (101.0.0)
   - RevenueCat (5.32.0)
   - shared_preferences_foundation (0.0.1):
-    - Flutter
-    - FlutterMacOS
-  - sign_in_with_apple (0.0.1):
     - Flutter
     - FlutterMacOS
   - url_launcher_ios (0.0.1):
@@ -1469,26 +1418,20 @@ PODS:
 DEPENDENCIES:
   - audioplayers_darwin (from `.symlinks/plugins/audioplayers_darwin/darwin`)
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
-  - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
   - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
   - Flutter (from `Flutter`)
-  - google_sign_in_ios (from `.symlinks/plugins/google_sign_in_ios/darwin`)
   - purchases_flutter (from `.symlinks/plugins/purchases_flutter/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
-  - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
   trunk:
     - abseil
-    - AppAuth
-    - AppCheckCore
     - BoringSSL-GRPC
     - Firebase
     - FirebaseAppCheckInterop
-    - FirebaseAuth
     - FirebaseAuthInterop
     - FirebaseCore
     - FirebaseCoreExtension
@@ -1500,18 +1443,14 @@ SPEC REPOS:
     - FirebaseSharedSwift
     - FirebaseStorage
     - GoogleDataTransport
-    - GoogleSignIn
     - GoogleUtilities
     - "gRPC-C++"
     - gRPC-Core
-    - GTMAppAuth
     - GTMSessionFetcher
     - leveldb-library
     - nanopb
     - PromisesObjC
-    - PromisesSwift
     - PurchasesHybridCommon
-    - RecaptchaInterop
     - RevenueCat
 
 EXTERNAL SOURCES:
@@ -1519,8 +1458,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/audioplayers_darwin/darwin"
   cloud_firestore:
     :path: ".symlinks/plugins/cloud_firestore/ios"
-  firebase_auth:
-    :path: ".symlinks/plugins/firebase_auth/ios"
   firebase_core:
     :path: ".symlinks/plugins/firebase_core/ios"
   firebase_messaging:
@@ -1529,31 +1466,23 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_storage/ios"
   Flutter:
     :path: Flutter
-  google_sign_in_ios:
-    :path: ".symlinks/plugins/google_sign_in_ios/darwin"
   purchases_flutter:
     :path: ".symlinks/plugins/purchases_flutter/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
-  sign_in_with_apple:
-    :path: ".symlinks/plugins/sign_in_with_apple/darwin"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
   abseil: a05cc83bf02079535e17169a73c5be5ba47f714b
-  AppAuth: ef4da5a3fc2e10b90c09a0a94a9baeaedc0341d5
-  AppCheckCore: e215d35177a9cf469927863e69c13e220df32a8b
   audioplayers_darwin: 835ced6edd4c9fc8ebb0a7cc9e294a91d99917d5
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   cloud_firestore: 511375ce1aea4e819e2df382fb1a141015cb8c60
   Firebase: e8400c058702940d53f31fc0653e4e7a06332326
-  firebase_auth: 3e82fa3e632856cd5a8e2bedf458d682740c8168
   firebase_core: c94f9efeed0ded590b7eecaf6110a374eb865d7a
   firebase_messaging: 00bcc97454f71d0dbe0a8adc6f2abf952320cfb2
   firebase_storage: cfd99be7642a3d9bf36d45ff234c1987dafb811c
   FirebaseAppCheckInterop: 6d4cd7b9df8047da8cfc98c3fef4618bab2a8e0d
-  FirebaseAuth: d27d2fc54508c3af9db2f617300fcf3042328d80
   FirebaseAuthInterop: 1679f5a45921270225b7eabf1ad4ebff8790fe82
   FirebaseCore: 52d4512296984a44a8c8870c6494870fc7aeee2f
   FirebaseCoreExtension: be2d62bfcf339c7dd94646d43d910aaf37fe17c1
@@ -1565,24 +1494,18 @@ SPEC CHECKSUMS:
   FirebaseSharedSwift: 983820e9aa55d2acd6af77f9a1f252ba0afb3150
   FirebaseStorage: 27f85a11050be78601509cb450a12823dc9f5764
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  google_sign_in_ios: 000870aa06da9b28d1d0bf7ef70ff0213059dd28
   GoogleDataTransport: a24e58982ab3ba2f64d79613e027fe7f57e88539
-  GoogleSignIn: e449a40a92e9f2eea56e98b5214d13725dc5a00a
   GoogleUtilities: 766ace00c6b10d8148408f329d10c4f051931850
   "gRPC-C++": cc207623316fb041a7a3e774c252cf68a058b9e8
   gRPC-Core: 860978b7db482de8b4f5e10677216309b5ff6330
-  GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
-  GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
+  GTMSessionFetcher: a6d2b2aa203485893d4511ff64642dc811f7c09f
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
-  PromisesSwift: 217dea0fd5d2ad65222a109c48698add13cc1c5b
   purchases_flutter: 3570127ba41583a75e553d68a763367007830eff
   PurchasesHybridCommon: 7f0944cc5411bdcd1ea5d69affa6a6f9aaf87b13
-  RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
   RevenueCat: 7e1d0768fb287c9983173c9b28e39ccbeeb828a9
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
-  sign_in_with_apple: 5e34677a4e74c5f42760f41b3bbe05343e84d171
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
 
 PODFILE CHECKSUM: 288656d4464589360115d6f81dd5d8f559352730

@@ -5,7 +5,6 @@ import '../../core/store/app_store.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
-import '../legal/crisis_sheet.dart';
 import '../onboarding/widgets/onboarding_option_tile.dart';
 import 'guide_beats.dart';
 import 'guide_screen.dart';
@@ -89,10 +88,6 @@ class HelpPickerScreen extends StatelessWidget {
                           );
                         },
                       ),
-                    BunlyTextButton(
-                      label: 'If this is an emergency',
-                      onPressed: () => CrisisSheet.open(context),
-                    ),
                     BunlyTextButton(
                       label: 'Not now',
                       onPressed: () => Navigator.of(context).maybePop(),

@@ -14,7 +14,7 @@ import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
 import '../../shared/widgets/bunly_card.dart';
 import '../convert/paywall_screen.dart';
-import 'account_screen.dart';
+import 'settings_screen.dart';
 import 'widget_studio_screen.dart';
 import 'you_look.dart';
 
@@ -498,15 +498,15 @@ class _YouBodyState extends State<YouBody> {
             ),
             const SizedBox(height: 10),
             YouKitTile(
-              title: 'Account & privacy',
-              body: 'Sign out, delete account, Privacy Policy, Terms.',
+              title: 'Settings',
+              body: 'Restore, legal, and delete my data.',
               art: BunlyPoses.delighted,
               trailing: CupertinoIcons.chevron_forward,
               onOpen: () {
                 NativeChrome.push(
                   context,
-                  AppMotion.fadeTo(const AccountScreen()),
-                  title: 'Account',
+                  AppMotion.fadeTo(const SettingsScreen()),
+                  title: 'Settings',
                 );
               },
             ),

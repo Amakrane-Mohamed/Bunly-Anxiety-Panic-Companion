@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -63,6 +62,8 @@ class _PaywallScreenState extends State<PaywallScreen>
 
   var _plan = _PayPlan.yearly;
   var _busy = false;
+  var _titleTaps = 0;
+  Timer? _titleTapReset;
 
   AnimationController get _breatheAnimation {
     return _breathe ??= AnimationController(
@@ -88,6 +89,7 @@ class _PaywallScreenState extends State<PaywallScreen>
 
   @override
   void dispose() {
+    _titleTapReset?.cancel();
     _breathe?.dispose();
     super.dispose();
   }
@@ -172,6 +174,21 @@ class _PaywallScreenState extends State<PaywallScreen>
     _toast('No active subscription on this Apple ID.');
   }
 
+  void _onTitleTap() {
+    if (_busy) return;
+    _titleTapReset?.cancel();
+    _titleTaps += 1;
+    HapticFeedback.selectionClick();
+    if (_titleTaps >= 3) {
+      _titleTaps = 0;
+      unawaited(_openTester());
+      return;
+    }
+    _titleTapReset = Timer(const Duration(milliseconds: 900), () {
+      _titleTaps = 0;
+    });
+  }
+
   Future<void> _openTester() async {
     HapticFeedback.selectionClick();
     final ok = await showDialog<bool>(
@@ -253,24 +270,27 @@ class _PaywallScreenState extends State<PaywallScreen>
                                   child: _GlassClose(onTap: _dismiss),
                                 ),
                                 const Spacer(),
-                                if (kDebugMode) _TestLabel(onTap: _openTester),
                               ],
                             ),
                             const SizedBox(height: 18),
                             FadeUp(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                child: Text(
-                                  promise,
-                                  textAlign: TextAlign.center,
-                                  style: AppTypography.display(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w800,
-                                    height: 1.12,
-                                    letterSpacing: -0.8,
-                                    color: Colors.white,
+                              child: GestureDetector(
+                                onTap: _onTitleTap,
+                                behavior: HitTestBehavior.opaque,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Text(
+                                    promise,
+                                    textAlign: TextAlign.center,
+                                    style: AppTypography.display(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w800,
+                                      height: 1.12,
+                                      letterSpacing: -0.8,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -311,44 +331,17 @@ class _PaywallScreenState extends State<PaywallScreen>
                             child: ListenableBuilder(
                               listenable: PurchasesService.instance,
                               builder: (context, _) {
-                                final purchases = PurchasesService.instance;
-                                final annual = purchases.annualPackage;
-                                final monthly = purchases.monthlyPackage;
-                                final save = _savePercent(annual, monthly);
-                                return Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: _PlanCard(
-                                        title: 'Yearly',
-                                        price:
-                                            annual?.storeProduct.priceString ??
-                                            '—',
-                                        detail: _yearlyDetail(annual),
-                                        badge: save == null
-                                            ? null
-                                            : 'Save $save%',
-                                        selected: yearly,
-                                        onTap: () => setState(
-                                          () => _plan = _PayPlan.yearly,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: _PlanCard(
-                                        title: 'Monthly',
-                                        price:
-                                            monthly?.storeProduct.priceString ??
-                                            '—',
-                                        detail: 'billed monthly',
-                                        selected: !yearly,
-                                        onTap: () => setState(
-                                          () => _plan = _PayPlan.monthly,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                return _PlanBlock(
+                                  yearly: yearly,
+                                  busy: _busy,
+                                  onSelectYearly: () => setState(
+                                    () => _plan = _PayPlan.yearly,
+                                  ),
+                                  onSelectMonthly: () => setState(
+                                    () => _plan = _PayPlan.monthly,
+                                  ),
+                                  onRetry: () =>
+                                      PurchasesService.instance.refresh(),
                                 );
                               },
                             ),
@@ -365,73 +358,59 @@ class _PaywallScreenState extends State<PaywallScreen>
                                 return _SubscribeButton(
                                   label: _busy
                                       ? 'One moment…'
-                                      : _subscribeLabel(package, yearly),
-                                  onPressed: _busy ? null : _buy,
+                                      : _subscribeLabel(package),
+                                  onPressed: _busy || package == null
+                                      ? null
+                                      : _buy,
                                 );
                               },
                             ),
                           ),
                           const SizedBox(height: 10),
                           FadeUp(
-                            delay: const Duration(milliseconds: 260),
-                            child: Text(
-                              yearly
-                                  ? 'Bunly Pro yearly. Auto-renews until you cancel in Settings → Subscriptions, at least 24 hours before the period ends. Charged to your Apple ID.'
-                                  : 'Bunly Pro monthly. Auto-renews until you cancel in Settings → Subscriptions, at least 24 hours before the period ends. Charged to your Apple ID.',
-                              textAlign: TextAlign.center,
-                              style: AppTypography.ui(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                height: 1.35,
-                                color: Colors.white.withValues(alpha: 0.58),
-                              ),
+                            delay: const Duration(milliseconds: 250),
+                            child: ListenableBuilder(
+                              listenable: PurchasesService.instance,
+                              builder: (context, _) {
+                                return Text(
+                                  _renewalLine(
+                                    yearly
+                                        ? PurchasesService.instance.annualPackage
+                                        : PurchasesService
+                                              .instance
+                                              .monthlyPackage,
+                                    yearly,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  style: AppTypography.ui(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.35,
+                                    color: Colors.white.withValues(alpha: 0.58),
+                                  ),
+                                );
+                              },
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 8),
                           FadeUp(
                             delay: const Duration(milliseconds: 280),
-                            child: GestureDetector(
-                              onTap: () {
-                                if (!_busy) _restore();
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                child: Text(
-                                  'Restore purchases',
-                                  style: AppTypography.ui(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white.withValues(alpha: 0.72),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          FadeUp(
-                            delay: const Duration(milliseconds: 320),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            child: Wrap(
+                              alignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 _LegalLink(
                                   label: 'Privacy Policy',
                                   onTap: () => LegalScreen.openPrivacy(context),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                  ),
-                                  child: Text(
-                                    '·',
-                                    style: AppTypography.ui(
-                                      fontSize: 12,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                    ),
-                                  ),
+                                _FooterDot(),
+                                _LegalLink(
+                                  label: _busy
+                                      ? 'Restoring…'
+                                      : 'Restore Purchases',
+                                  onTap: _busy ? () {} : _restore,
                                 ),
+                                _FooterDot(),
                                 _LegalLink(
                                   label: 'Terms of Use',
                                   onTap: () => LegalScreen.openTerms(context),
@@ -453,9 +432,152 @@ class _PaywallScreenState extends State<PaywallScreen>
   }
 }
 
+class _PlanBlock extends StatelessWidget {
+  const _PlanBlock({
+    required this.yearly,
+    required this.busy,
+    required this.onSelectYearly,
+    required this.onSelectMonthly,
+    required this.onRetry,
+  });
+
+  final bool yearly;
+  final bool busy;
+  final VoidCallback onSelectYearly;
+  final VoidCallback onSelectMonthly;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final purchases = PurchasesService.instance;
+    final hasPlans =
+        purchases.annualPackage != null || purchases.monthlyPackage != null;
+    final loading = purchases.offerings == null && purchases.lastError == null;
+    if (loading && !hasPlans) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 28),
+        child: Center(
+          child: SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.4,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    }
+    if (!hasPlans) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          children: [
+            Text(
+              'Couldn’t load plans right now. Check your connection and try again.',
+              textAlign: TextAlign.center,
+              style: AppTypography.ui(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 1.35,
+                color: Colors.white.withValues(alpha: 0.82),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _RestoreButton(
+              label: 'Try again',
+              busy: busy,
+              onTap: onRetry,
+            ),
+          ],
+        ),
+      );
+    }
+
+    final annual = purchases.annualPackage;
+    final monthly = purchases.monthlyPackage;
+    final save = _savePercent(annual, monthly);
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+        Expanded(
+          child: _PlanCard(
+            title: 'Bunly Pro',
+            length: '1 year',
+            price: annual?.storeProduct.priceString ?? 'Price unavailable',
+            detail: _yearlyDetail(annual),
+            badge: save == null ? 'Best value' : 'Save $save%',
+            selected: yearly,
+            onTap: onSelectYearly,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _PlanCard(
+            title: 'Bunly Pro',
+            length: '1 month',
+            price: monthly?.storeProduct.priceString ?? 'Price unavailable',
+            detail: 'per month',
+            selected: !yearly,
+            onTap: onSelectMonthly,
+          ),
+        ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RestoreButton extends StatelessWidget {
+  const _RestoreButton({
+    required this.onTap,
+    this.busy = false,
+    this.label = 'Restore Purchases',
+  });
+
+  final VoidCallback onTap;
+  final bool busy;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        onTap: busy ? null : onTap,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
+            color: Colors.white.withValues(alpha: 0.12),
+          ),
+          child: SizedBox(
+            height: 46,
+            width: double.infinity,
+            child: Center(
+              child: Text(
+                busy ? 'One moment…' : label,
+                style: AppTypography.ui(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _PlanCard extends StatelessWidget {
   const _PlanCard({
     required this.title,
+    required this.length,
     required this.price,
     required this.detail,
     required this.selected,
@@ -464,6 +586,7 @@ class _PlanCard extends StatelessWidget {
   });
 
   final String title;
+  final String length;
   final String price;
   final String detail;
   final bool selected;
@@ -472,10 +595,10 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
+    final card = Semantics(
       button: true,
       selected: selected,
-      label: title,
+      label: '$title $length $price',
       child: GestureDetector(
         onTap: () {
           HapticFeedback.selectionClick();
@@ -489,7 +612,7 @@ class _PlanCard extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOut,
-            height: 148,
+            height: 156,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: selected
@@ -506,7 +629,7 @@ class _PlanCard extends StatelessWidget {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -516,42 +639,24 @@ class _PlanCard extends StatelessWidget {
                           child: Text(
                             title,
                             style: AppTypography.ui(
-                              fontSize: 15,
+                              fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white.withValues(alpha: 0.94),
+                              color: Colors.white.withValues(alpha: 0.78),
                             ),
                           ),
                         ),
                         _SelectDot(selected: selected),
                       ],
                     ),
-                    if (badge != null) ...[
-                      const SizedBox(height: 8),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(
-                            alpha: selected ? 0.22 : 0.12,
-                          ),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          child: Text(
-                            badge!,
-                            style: AppTypography.ui(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.2,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                    const SizedBox(height: 2),
+                    Text(
+                      length,
+                      style: AppTypography.ui(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
                       ),
-                    ] else
-                      const SizedBox(height: 8),
+                    ),
                     const Spacer(),
                     Text(
                       price,
@@ -575,6 +680,62 @@ class _PlanCard extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+
+    if (badge == null) return card;
+    return SizedBox(
+      height: 156,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(child: card),
+          Positioned(
+            top: -11,
+            left: 0,
+            right: 0,
+            child: Center(child: _GoldBadge(label: badge!)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GoldBadge extends StatelessWidget {
+  const _GoldBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF8E7B0), Color(0xFFE4C36A), Color(0xFFC9A227)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE4C36A).withValues(alpha: 0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        child: Text(
+          label.toUpperCase(),
+          style: AppTypography.ui(
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.55,
+            color: const Color(0xFF3A2A08),
           ),
         ),
       ),
@@ -699,43 +860,14 @@ class _GlassClose extends StatelessWidget {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
+                color: Colors.white.withValues(alpha: 0.34),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
               ),
               child: const SizedBox(
                 width: 40,
                 height: 40,
                 child: Icon(Icons.close_rounded, size: 18, color: Colors.white),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TestLabel extends StatelessWidget {
-  const _TestLabel({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Test',
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
-          child: Text(
-            'Test',
-            style: AppTypography.ui(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.32),
             ),
           ),
         ),
@@ -881,6 +1013,22 @@ class _TesterDialogState extends State<_TesterDialog> {
   }
 }
 
+class _FooterDot extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Text(
+        '·',
+        style: AppTypography.ui(
+          fontSize: 12,
+          color: Colors.white.withValues(alpha: 0.45),
+        ),
+      ),
+    );
+  }
+}
+
 class _LegalLink extends StatelessWidget {
   const _LegalLink({required this.label, required this.onTap});
 
@@ -892,13 +1040,13 @@ class _LegalLink extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
         child: Text(
           label,
           style: AppTypography.ui(
             fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: Colors.white.withValues(alpha: 0.78),
+            fontWeight: FontWeight.w600,
+            color: Colors.white.withValues(alpha: 0.62),
           ),
         ),
       ),
@@ -908,11 +1056,18 @@ class _LegalLink extends StatelessWidget {
 
 String _yearlyDetail(Package? package) {
   final product = package?.storeProduct;
-  if (product == null) return 'billed yearly';
+  if (product == null) return 'per year';
   final monthly = product.price / 12;
-  if (monthly <= 0) return 'billed yearly';
+  if (monthly <= 0) return 'per year';
   final symbol = _currencySymbol(product.priceString);
-  return '$symbol${monthly.toStringAsFixed(2)} / month';
+  return '$symbol${monthly.toStringAsFixed(2)}/mo';
+}
+
+String _renewalLine(Package? package, bool yearly) {
+  final price = package?.storeProduct.priceString;
+  final period = yearly ? '1 year' : '1 month';
+  final shown = price == null ? period : '$period · $price';
+  return 'Bunly Pro · $shown. Auto-renews. Cancel in Settings at least 24 hours before the period ends. Charged to your Apple ID.';
 }
 
 int? _savePercent(Package? annual, Package? monthly) {
@@ -924,10 +1079,10 @@ int? _savePercent(Package? annual, Package? monthly) {
   return (((yearIfMonthly - year) / yearIfMonthly) * 100).round();
 }
 
-String _subscribeLabel(Package? package, bool yearly) {
+String _subscribeLabel(Package? package) {
   final trial = _trialLabel(package);
-  if (yearly && trial != null) return 'Start $trial free';
-  return 'Continue';
+  if (trial != null) return 'Start free trial';
+  return 'Unlock Bunly Pro';
 }
 
 String? _trialLabel(Package? package) {

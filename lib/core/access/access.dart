@@ -3,12 +3,12 @@ import 'package:flutter/foundation.dart';
 import '../purchases/purchases_service.dart';
 import '../store/local_disk.dart';
 
-/// Who can open the full companion: paid, or a tester with 1111.
+/// Who can open the full companion: paid, or a tester with 7789.
 class Access extends ChangeNotifier {
   Access._();
   static final Access instance = Access._();
 
-  static const testerCode = '1111';
+  static const testerCode = '7789';
   static const _onboardedKey = 'bunly.onboarded';
   static const _testerKey = 'bunly.tester';
 
@@ -21,11 +21,7 @@ class Access extends ChangeNotifier {
   Future<void> hydrate() async {
     final prefs = await LocalDisk.open();
     onboarded = prefs?.getBool(_onboardedKey) ?? false;
-    final storedTester = prefs?.getBool(_testerKey) ?? false;
-    tester = storedTester && kDebugMode;
-    if (!kDebugMode && storedTester) {
-      await prefs?.remove(_testerKey);
-    }
+    tester = prefs?.getBool(_testerKey) ?? false;
     premium = PurchasesService.instance.isPro;
     notifyListeners();
   }
@@ -39,7 +35,6 @@ class Access extends ChangeNotifier {
   }
 
   Future<void> enableTester() async {
-    if (!kDebugMode) return;
     tester = true;
     final prefs = await LocalDisk.open();
     await prefs?.setBool(_testerKey, true);

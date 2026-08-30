@@ -1,7 +1,7 @@
 name: bunly
 description: Anxiety & Panic Companion.
 publish_to: 'none'
-version: 1.0.0+7
+version: 2.0.0+7
 
 environment:
   sdk: ^3.12.2
@@ -11,13 +11,9 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   firebase_core: ^4.13.0
-  firebase_auth: ^6.5.7
   cloud_firestore: ^6.8.0
   firebase_messaging: ^16.5.0
   firebase_storage: ^13.4.6
-  sign_in_with_apple: ^8.1.0
-  google_sign_in: ^7.2.0
-  crypto: ^3.0.7
   audioplayers: ^6.5.1
   shared_preferences: ^2.5.3
   purchases_flutter: ^8.11.0

@@ -72,10 +72,8 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>NSCameraUsageDescription</key>
-	<string>Bunly uses your camera only if you choose to take a photo for your profile or journal.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Bunly uses your photo library only if you choose to add a photo to your profile or journal.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Bunly sends optional check-in reminders you asked for, for example a quiet morning ping so Bondly can ask how you are feeling today. You can turn reminders off in Settings.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -14,11 +13,14 @@ class PurchasesService extends ChangeNotifier {
   static final PurchasesService instance = PurchasesService._();
 
   var configured = false;
+  var loading = false;
   var isPro = false;
   Offerings? offerings;
   String? lastError;
 
   bool get ready => configured && RevenueCatConfig.hasApiKey;
+
+  bool get hasPlans => annualPackage != null || monthlyPackage != null;
 
   Package? get annualPackage {
     final offering = _offering;
@@ -60,27 +62,13 @@ class PurchasesService extends ChangeNotifier {
       if (kDebugMode) {
         await Purchases.setLogLevel(LogLevel.debug);
       }
-      final config = PurchasesConfiguration(RevenueCatConfig.appleApiKey)
-        ..appUserID = FirebaseAuth.instance.currentUser?.uid;
+      final config = PurchasesConfiguration(RevenueCatConfig.appleApiKey);
       await Purchases.configure(config);
       configured = true;
       Purchases.addCustomerInfoUpdateListener((info) {
         _apply(info);
       });
       await refresh();
-      FirebaseAuth.instance.authStateChanges().listen((user) async {
-        if (!configured) return;
-        try {
-          if (user != null) {
-            await Purchases.logIn(user.uid);
-          } else {
-            await Purchases.logOut();
-          }
-          await refresh();
-        } catch (error) {
-          debugPrint('RevenueCat identity: $error');
-        }
-      });
     } catch (error) {
       lastError = '$error';
       debugPrint('RevenueCat configure failed: $error');
@@ -89,6 +77,9 @@ class PurchasesService extends ChangeNotifier {
 
   Future<void> refresh() async {
     if (!configured) return;
+    loading = true;
+    lastError = null;
+    notifyListeners();
     try {
       offerings = await Purchases.getOfferings();
       final info = await Purchases.getCustomerInfo();
@@ -96,8 +87,10 @@ class PurchasesService extends ChangeNotifier {
     } catch (error) {
       lastError = '$error';
       debugPrint('RevenueCat refresh failed: $error');
+    } finally {
+      loading = false;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   void _apply(CustomerInfo info) {

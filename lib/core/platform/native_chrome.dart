@@ -37,6 +37,12 @@ abstract final class NativeChrome {
     return _invoke('setVisible', {'nav': false, 'tab': false});
   }
 
+  /// Drops overlay covers and hides chrome. Used after wiping on-device data.
+  static Future<void> resetHidden() async {
+    _coverCount = 0;
+    await hideTabs();
+  }
+
   static Future<void> setTab(int index) {
     tabIndex.value = index;
     return _invoke('setTab', index);

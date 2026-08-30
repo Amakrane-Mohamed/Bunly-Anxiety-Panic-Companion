@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -9,7 +8,6 @@ import 'core/access/access.dart';
 import 'core/purchases/purchases_service.dart';
 import 'core/store/app_store.dart';
 import 'core/theme/app_colors.dart';
-import 'features/auth/auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,11 +15,6 @@ Future<void> main() async {
   debugPaintBaselinesEnabled = false;
   debugPaintLayerBordersEnabled = false;
   await Firebase.initializeApp();
-  try {
-    await AuthService.initialize();
-  } catch (error) {
-    debugPrint('Launch auth failed: $error');
-  }
   try {
     await AppStore.instance.hydrate();
   } catch (error) {
@@ -36,13 +29,6 @@ Future<void> main() async {
     await Access.instance.hydrate();
   } catch (error) {
     debugPrint('Launch access failed: $error');
-  }
-  if (!Access.instance.onboarded) {
-    try {
-      await FirebaseAuth.instance.signOut();
-    } catch (error) {
-      debugPrint('Launch sign-out failed: $error');
-    }
   }
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);

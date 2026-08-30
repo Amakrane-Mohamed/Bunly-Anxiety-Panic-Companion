@@ -15,24 +15,12 @@ abstract final class LegalLinks {
 
   static const contactEmail = String.fromEnvironment(
     'BUNLY_CONTACT_EMAIL',
-    defaultValue: 'hello@bunly.app',
+    defaultValue: 'mohamed.amakrane.dev@gmail.com',
   );
 
   static Future<void> openEmail() async {
     try {
       await launchUrl(Uri.parse('mailto:$contactEmail'));
-    } catch (_) {}
-  }
-
-  static Future<void> call988() async {
-    try {
-      await launchUrl(Uri.parse('tel:988'));
-    } catch (_) {}
-  }
-
-  static Future<void> text988() async {
-    try {
-      await launchUrl(Uri.parse('sms:988'));
     } catch (_) {}
   }
 

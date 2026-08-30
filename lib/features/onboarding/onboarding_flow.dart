@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,7 +12,6 @@ import '../../core/theme/app_typography.dart';
 import '../../shared/widgets/bunly_button.dart';
 import '../../shared/widgets/fade_up.dart';
 import '../../shared/widgets/readable_width.dart';
-import '../auth/sign_in_screen.dart';
 import '../home/profile_setup.dart';
 import 'onboarding_content.dart';
 import 'widgets/bunly_moments.dart';
@@ -139,13 +137,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   pose: _step.pose,
                   onDone: () {
                     _savePlan();
-                    final signedIn = FirebaseAuth.instance.currentUser != null;
                     Navigator.of(context).pushAndRemoveUntil(
-                      AppMotion.fadeTo(
-                        signedIn
-                            ? const ProfileSetupScreen()
-                            : const SignInScreen(),
-                      ),
+                      AppMotion.fadeTo(const ProfileSetupScreen()),
                       (_) => false,
                     );
                   },
