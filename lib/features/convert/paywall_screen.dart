@@ -327,6 +327,11 @@ class _PaywallScreenState extends State<PaywallScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           FadeUp(
+                            delay: const Duration(milliseconds: 120),
+                            child: const _ProIncludes(),
+                          ),
+                          const SizedBox(height: 10),
+                          FadeUp(
                             delay: const Duration(milliseconds: 140),
                             child: ListenableBuilder(
                               listenable: PurchasesService.instance,
@@ -334,12 +339,10 @@ class _PaywallScreenState extends State<PaywallScreen>
                                 return _PlanBlock(
                                   yearly: yearly,
                                   busy: _busy,
-                                  onSelectYearly: () => setState(
-                                    () => _plan = _PayPlan.yearly,
-                                  ),
-                                  onSelectMonthly: () => setState(
-                                    () => _plan = _PayPlan.monthly,
-                                  ),
+                                  onSelectYearly: () =>
+                                      setState(() => _plan = _PayPlan.yearly),
+                                  onSelectMonthly: () =>
+                                      setState(() => _plan = _PayPlan.monthly),
                                   onRetry: () =>
                                       PurchasesService.instance.refresh(),
                                 );
@@ -375,7 +378,9 @@ class _PaywallScreenState extends State<PaywallScreen>
                                 return Text(
                                   _renewalLine(
                                     yearly
-                                        ? PurchasesService.instance.annualPackage
+                                        ? PurchasesService
+                                              .instance
+                                              .annualPackage
                                         : PurchasesService
                                               .instance
                                               .monthlyPackage,
@@ -432,6 +437,142 @@ class _PaywallScreenState extends State<PaywallScreen>
   }
 }
 
+class _ProIncludes extends StatelessWidget {
+  const _ProIncludes();
+
+  static const _items = [
+    'Home Screen widgets you can customize',
+    'All Bondly face cards in You',
+    'Full Journey — lessons, sessions, and reminders',
+    'Panic companion tools on Today',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _NoiseGlass(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < _items.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.28),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.check_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _items[i],
+                    style: AppTypography.ui(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      height: 1.32,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _NoiseGlass extends StatelessWidget {
+  const _NoiseGlass({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1040).withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.20),
+                  ),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: CustomPaint(painter: _NoisePainter()),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: child,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NoisePainter extends CustomPainter {
+  static final _specks = List<_Speck>.generate(96, (i) {
+    final n = (i * 7919 + 104729) % 10000;
+    return _Speck(
+      x: (n % 97) / 97,
+      y: ((n ~/ 97) % 53) / 53,
+      size: 0.6 + ((n % 7) * 0.18),
+      opacity: 0.04 + ((n % 11) * 0.012),
+    );
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint();
+    for (final speck in _specks) {
+      paint.color = Colors.white.withValues(alpha: speck.opacity);
+      canvas.drawCircle(
+        Offset(speck.x * size.width, speck.y * size.height),
+        speck.size,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _Speck {
+  const _Speck({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.opacity,
+  });
+
+  final double x;
+  final double y;
+  final double size;
+  final double opacity;
+}
+
 class _PlanBlock extends StatelessWidget {
   const _PlanBlock({
     required this.yearly,
@@ -484,11 +625,7 @@ class _PlanBlock extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _RestoreButton(
-              label: 'Try again',
-              busy: busy,
-              onTap: onRetry,
-            ),
+            _RestoreButton(label: 'Try again', busy: busy, onTap: onRetry),
           ],
         ),
       );
@@ -502,28 +639,28 @@ class _PlanBlock extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-        Expanded(
-          child: _PlanCard(
-            title: 'Bunly Pro',
-            length: '1 year',
-            price: annual?.storeProduct.priceString ?? 'Price unavailable',
-            detail: _yearlyDetail(annual),
-            badge: save == null ? 'Best value' : 'Save $save%',
-            selected: yearly,
-            onTap: onSelectYearly,
+          Expanded(
+            child: _PlanCard(
+              title: 'Bunly Pro',
+              length: '1 year',
+              price: annual?.storeProduct.priceString ?? 'Price unavailable',
+              detail: _yearlyDetail(annual),
+              badge: save == null ? 'Best value' : 'Save $save%',
+              selected: yearly,
+              onTap: onSelectYearly,
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _PlanCard(
-            title: 'Bunly Pro',
-            length: '1 month',
-            price: monthly?.storeProduct.priceString ?? 'Price unavailable',
-            detail: 'per month',
-            selected: !yearly,
-            onTap: onSelectMonthly,
+          const SizedBox(width: 10),
+          Expanded(
+            child: _PlanCard(
+              title: 'Bunly Pro',
+              length: '1 month',
+              price: monthly?.storeProduct.priceString ?? 'Price unavailable',
+              detail: 'per month',
+              selected: !yearly,
+              onTap: onSelectMonthly,
+            ),
           ),
-        ),
         ],
       ),
     );

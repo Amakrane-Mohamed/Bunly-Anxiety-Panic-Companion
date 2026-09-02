@@ -1,7 +1,7 @@
 name: bunly
 description: Anxiety & Panic Companion.
 publish_to: 'none'
-version: 2.0.0+7
+version: 2.0.0+8
 
 environment:
   sdk: ^3.12.2
